@@ -4,7 +4,6 @@ FROM alpine:${ALPINE_VERSION}
 # - CVE-2026-109618 & CVE-2026-109619 (PHP2Shell): Critical RCE via OOM memory corruption & use-after-free fixed in PHP 8.4.27+
 # - CVE-2026-109449: Unbounded nesting DoS in expression parser fixed in Symfony 7.4.21+
 
-LABEL maintainer="Stanislaw Korzan <stanislawkorzan@gmail.com>"
 LABEL Description="Lightweight container with Nginx and PHP 8.4.27 (patches for CVE-2026-109618, CVE-2026-109619, CVE-2026-109449)"
 LABEL org.opencontainers.image.title="Elasticsearch Admin"
 LABEL org.opencontainers.image.description="Elasticsearch Admin with Nginx and hardened PHP 8.4.27 runtime"
