@@ -1,7 +1,19 @@
 ARG ALPINE_VERSION=3.24
 FROM alpine:${ALPINE_VERSION}
-LABEL Maintainer="Tim de Pater <code@trafex.nl>"
-LABEL Description="Lightweight container with Nginx 1.26 & PHP 8.4.27 based on Alpine Linux"
+# Security Patches & Hardening:
+# - CVE-2026-109618 & CVE-2026-109619 (PHP2Shell): Critical RCE via OOM memory corruption & use-after-free fixed in PHP 8.4.27+
+# - CVE-2026-109449: Unbounded nesting DoS in expression parser fixed in Symfony 7.4.21+
+
+LABEL maintainer="Stanislaw Korzan <stanislawkorzan@gmail.com>"
+LABEL Description="Lightweight container with Nginx and PHP 8.4.27 (patches for CVE-2026-109618, CVE-2026-109619, CVE-2026-109449)"
+LABEL org.opencontainers.image.title="Elasticsearch Admin"
+LABEL org.opencontainers.image.description="Elasticsearch Admin with Nginx and hardened PHP 8.4.27 runtime"
+LABEL org.opencontainers.image.source="https://github.com/skorzan/elasticsearch_admin"
+LABEL org.opencontainers.image.url="https://github.com/skorzan/elasticsearch_admin"
+LABEL org.opencontainers.image.vendor="skorzan"
+LABEL security.patches.php="CVE-2026-109618, CVE-2026-109619 (PHP 8.4.27)"
+LABEL security.patches.symfony="CVE-2026-109449 (Symfony 7.4.21)"
+LABEL security.cve.fixed="CVE-2026-109618, CVE-2026-109619, CVE-2026-109449"
 
 ENV APP_ENV=prod
 ENV INSTALLATION_TYPE=docker

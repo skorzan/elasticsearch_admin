@@ -2,6 +2,21 @@
 
 [Visit the website on GitHub for all details](https://stephanediondev.github.io/elasticsearch-admin/)
 
+---
+
+## 🔒 Security Patches & Hardening
+
+This release is hardened against known vulnerabilities and tested for zero security advisories (`composer audit` clean):
+
+* **CVE-2026-109618 & CVE-2026-109619 (PHP2Shell)**:
+  * **Severity**: Critical (Remote Code Execution)
+  * **Fix**: Upgraded and pinned PHP runtime to **PHP 8.4.27+** (handling OOM memory corruption and global state Use-After-Free).
+* **CVE-2026-109449**:
+  * **Severity**: Medium / High (Denial of Service / Process Crash)
+  * **Fix**: Upgraded Symfony components (including `symfony/expression-language`) to **v7.4.21+**.
+
+---
+
 [![elasticsearch-admin - Cluster summary](https://raw.githubusercontent.com/stephanediondev/elasticsearch-admin/main/screenshots/8/resized/resized-cluster.png)](https://raw.githubusercontent.com/stephanediondev/elasticsearch-admin/main/screenshots/8/original/original-cluster.png)
 
 [![elasticsearch-admin - Cluster audit](https://raw.githubusercontent.com/stephanediondev/elasticsearch-admin/main/screenshots/8/resized/resized-cluster-audit.png)](https://raw.githubusercontent.com/stephanediondev/elasticsearch-admin/main/screenshots/8/original/original-cluster-audit.png)
