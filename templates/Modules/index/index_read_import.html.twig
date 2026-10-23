@@ -1,0 +1,79 @@
+{% extends 'base.html.twig' %}
+{% import 'Import/app_import.html.twig' as appImport %}
+
+{% block head_title %}{{ 'indices'|trans }} - {{ index.name }} - {{ 'import_from_file'|trans }}{% endblock %}
+
+{% block heading_1 %}
+    {{ appImport.heading({'level': 1, 'title': 'indices'|trans, 'link': {'url': path('indices')}}) }}
+{% endblock %}
+
+{% block heading_2 %}
+    {{ appImport.heading({'level': 2, 'title': index.name, 'badge': {'title': index.health|trans, 'context': index.health}}) }}
+{% endblock %}
+
+{% block tabs %}
+    {% include 'Modules/index/index_read_tabs.html.twig' with {'active': 'import_from_file'} %}
+{% endblock %}
+
+{% block main_content %}
+    {% embed 'Embed/block_embed.html.twig' %}
+        {% import 'Import/app_import.html.twig' as appImport %}
+        {% block content %}
+            {{ appImport.heading({'level': 3, 'title': 'import_from_file'|trans}) }}
+
+            <p>
+                <button class="btn btn-secondary btn-sm" type="button" data-bs-toggle="collapse" data-bs-target="#collapseHelp" aria-expanded="false" aria-controls="collapseHelp">
+                    {{ 'help'|trans }}
+                </button>
+            </p>
+
+            <div class="collapse mb-4" id="collapseHelp">
+                {% embed 'Embed/table_embed.html.twig' %}
+                    {% import 'Import/app_import.html.twig' as appImport %}
+
+                    {% block thead %}
+                        <tr>
+                            <th>{{ 'field'|trans }}</th>
+                            <th>{{ 'type'|trans }}</th>
+                        </tr>
+                    {% endblock %}
+
+                    {% block tbody %}
+                        <tr>
+                            <td>_id</td>
+                            <td>{{ 'import_note_id'|trans }}</td>
+                        </tr>
+                        <tr>
+                            <td>_type</td>
+                            <td>{{ 'import_note_type'|trans }}</td>
+                        </tr>
+                        {% for field, mapping in index.mappingsFlat %}
+                            <tr>
+                                <td>{{ field }}</td>
+                                <td>
+                                    {{ mapping['type'] }}
+                                    {% if 'geo_point' == mapping['type'] %} ({{ 'import_note_geo_point'|trans }}){% endif %}
+                                    {% if 'keyword' == mapping['type'] %} ({{ 'import_note_keyword'|trans }}){% endif %}
+                                    {% if mapping['type'] in ['nested', 'geo_shape'] %} ({{ 'import_note_json'|trans }}){% endif %}
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    {% endblock %}
+                {% endembed %}
+            </div>
+
+            {{ appImport.form({'form': form}) }}
+        {% endblock %}
+    {% endembed %}
+
+    {% if response is defined %}
+        {% embed 'Embed/block_embed.html.twig' %}
+            {% import 'Import/app_import.html.twig' as appImport %}
+            {% block content %}
+                {{ appImport.heading({'level': 4, 'title': 'response'|trans}) }}
+
+                <pre id="response">{{ response|json_encode(constant('JSON_PRETTY_PRINT')) }}</pre>
+            {% endblock %}
+        {% endembed %}
+    {% endif %}
+{% endblock %}

@@ -1,0 +1,42 @@
+
+###> symfony/framework-bundle ###
+.env
+config/secrets/prod/prod.decrypt.private.php
+public/bundles
+var
+vendor
+###< symfony/framework-bundle ###
+
+###> symfony/phpunit-bridge ###
+.phpunit
+.phpunit.result.cache
+phpunit.xml
+###< symfony/phpunit-bridge ###
+
+###> symfony/asset-mapper ###
+/public/assets/
+/assets/vendor/
+###< symfony/asset-mapper ###
+
+.dockerignore
+.DS_Store
+.env.test
+.git
+.github
+.gitignore
+.php_cs.cache
+.symfony.insight.yaml
+.travis.yml
+bin/.phpunit
+bin/phpunit
+config/packages/dev
+config/packages/test
+config/routes/dev
+Dockerfile
+docs
+phpunit.xml.dist
+screenshots
+src/DataFixtures
+tests
+update.sh
+info.json

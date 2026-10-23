@@ -1,0 +1,54 @@
+{% extends 'base.html.twig' %}
+{% import 'Import/app_import.html.twig' as appImport %}
+
+{% block head_title %}{{ 'subscriptions'|trans }} - {{ ('create_subscription_' ~ type)|trans }}{% endblock %}
+
+{% block heading_1 %}
+    {{ appImport.heading({'level': 1, 'title': 'subscriptions'|trans}) }}
+{% endblock %}
+
+{% block tabs %}
+    {% include 'Modules/subscription/subscription_tabs.html.twig' with {'active': 'create_subscription_' ~ type} %}
+{% endblock %}
+
+{% block importmap %}
+    <script>
+        var applicationServerKey = '{{ applicationServerKey }}';
+    </script>
+
+    {{ importmap(['app', 'app-subscription']) }}
+{% endblock %}
+
+{% block main_content %}
+    {% embed 'Embed/block_embed.html.twig' %}
+        {% import 'Import/app_import.html.twig' as appImport %}
+        {% block content %}
+            {{ appImport.heading({'level': 3, 'title': ('create_subscription_' ~ type)|trans}) }}
+
+            {% embed 'Embed/buttons_embed.html.twig' %}
+                {% import 'Import/app_import.html.twig' as appImport %}
+                {% block content %}
+                    {% if applicationServerKey and 'push' == type %}
+                        <a href="#" class="btn btn-primary btn-sm" id="allow-notifications">
+                            {{ 'allow_notifications'|trans }}
+                        </a>
+                    {% endif %}
+
+                    {% if 'slack' == type %}
+                        <a class="btn btn-secondary btn-sm" rel="noreferrer" target="_blank" href="https://api.slack.com/messaging/webhooks">
+                            {{ 'help'|trans }}
+                        </a>
+                    {% endif %}
+
+                    {% if 'teams' == type %}
+                        <a class="btn btn-secondary btn-sm" rel="noreferrer" target="_blank" href="https://docs.microsoft.com/en-us/microsoftteams/platform/webhooks-and-connectors/how-to/add-incoming-webhook#what-are-incoming-webhooks-in-teams">
+                            {{ 'help'|trans }}
+                        </a>
+                    {% endif %}
+                {% endblock %}
+            {% endembed %}
+
+            {{ appImport.form({'form': form}) }}
+        {% endblock %}
+    {% endembed %}
+{% endblock %}

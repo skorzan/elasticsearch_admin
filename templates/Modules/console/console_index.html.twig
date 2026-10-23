@@ -1,0 +1,74 @@
+{% extends 'base.html.twig' %}
+{% import 'Import/app_import.html.twig' as appImport %}
+
+{% block head_title %}{{ 'console'|trans }}{% if response is defined %} {{ path }}{% endif %}{% endblock %}
+
+{% block heading_1 %}
+    {{ appImport.heading({'level': 1, 'title': 'console'|trans}) }}
+{% endblock %}
+
+{% block main_content %}
+    {% embed 'Embed/block_embed.html.twig' %}
+        {% import 'Import/app_import.html.twig' as appImport %}
+        {% block content %}
+            {{ appImport.form({'form': form}) }}
+        {% endblock %}
+    {% endembed %}
+
+    {% if response is defined %}
+        {% embed 'Embed/block_embed.html.twig' %}
+            {% import 'Import/app_import.html.twig' as appImport %}
+            {% block content %}
+                {{ appImport.heading({'level': 4, 'title': 'response'|trans}) }}
+
+                {% embed 'Embed/buttons_embed.html.twig' %}
+                    {% import 'Import/app_import.html.twig' as appImport %}
+                    {% block content %}
+                        <a class="btn btn-primary btn-sm" href="#" id="save">
+                            {{ 'save'|trans }}
+                        </a>
+                    {% endblock %}
+                {% endembed %}
+
+                {% if response_code is defined %}
+                    <p>
+                        <strong>{{ 'response_code'|trans }}</strong><br>
+                        {{ response_code }}
+                    </p>
+                {% endif %}
+
+                {% if response %}
+                    <pre id="response">{{ response|json_encode(constant('JSON_PRETTY_PRINT')) }}</pre>
+                {% endif %}
+            {% endblock %}
+        {% endembed %}
+    {% endif %}
+{% endblock %}
+
+{% block scripts %}
+    {{ parent() }}
+
+    <script type="text/javascript">
+        var form = document.querySelector('form');
+        var dataPath = document.getElementById('data_path');
+        var save = document.getElementById('save');
+        var response = document.getElementById('response');
+
+        form.addEventListener('submit', function(event) {
+            var path = dataPath.value;
+            path = path.trim();
+            if ('/' != path.substring(0, 1)) {
+                dataPath.value = '/' + path;
+            }
+        });
+
+        {% if response is defined %}
+            save.addEventListener('click', function(event) {
+                event.preventDefault();
+                var jsonString = response.textContent;
+                var blob = new Blob([jsonString], {'type': 'application/json;charset=utf-8'});
+                saveAs(blob, 'response-{{ method }}-' + slug('{{ path }}') + '.json');
+            });
+        {% endif %}
+    </script>
+{% endblock %}

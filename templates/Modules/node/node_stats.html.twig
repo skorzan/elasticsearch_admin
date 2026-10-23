@@ -1,0 +1,99 @@
+{% extends 'base.html.twig' %}
+{% import 'Import/app_import.html.twig' as appImport %}
+
+{% block head_title %}{{ 'nodes'|trans }} - {{ 'stats'|trans }}{% endblock %}
+
+{% block heading_1 %}
+    {{ appImport.heading({'level': 1, 'title': 'nodes'|trans}) }}
+{% endblock %}
+
+{% block tabs %}
+    {% include 'Modules/node/node_tabs.html.twig' with {'active': 'stats'} %}
+{% endblock %}
+
+{% block main_content %}
+    {% embed 'Embed/block_embed.html.twig' %}
+        {% import 'Import/app_import.html.twig' as appImport %}
+        {% block content %}
+            {{ appImport.form({'form': form, 'type': 'search'}) }}
+        {% endblock %}
+    {% endembed %}
+
+    {% embed 'Embed/block_embed.html.twig' %}
+        {% import 'Import/app_import.html.twig' as appImport %}
+        {% block content %}
+            {{ appImport.heading({'level': 3, 'title': 'stats'|trans}) }}
+
+            <hr>
+
+            <div class="row">
+                {% for key, total in data.totals %}
+                    {% if 'nodes_total_disk_avail' == key or 'nodes_total_disk_used' == key %}
+                        {{ appImport.dashboardKpi({'title': ('stats_data.' ~ key)|trans, 'badge': {'title': total|human_filesize}}) }}
+                    {% else %}
+                        {{ appImport.dashboardKpi({'title': ('stats_data.' ~ key)|trans, 'badge': {'title': total}}) }}
+                    {% endif %}
+            {% endfor %}
+            </div>
+
+            <hr>
+
+            <div class="row row-cols-1 row-cols-md-2 g-4">
+                {% for key, results in data.tables %}
+                    {% if 0 < results|length %}
+                        {% embed 'Embed/stats_table_embed.html.twig' %}
+                            {% import 'Import/app_import.html.twig' as appImport %}
+
+                            {% block title %}{{ ('stats_data.' ~ key)|trans }}{% endblock %}
+
+                            {% block content %}
+                                {% for row in results %}
+                                    {% if 'nodes_by_disk_avail' == key %}
+                                        {% set percent = appImport.getPercent(data.totals.nodes_total_disk_avail, row.total, 1) %}
+                                    {% elseif 'nodes_by_disk_used' == key %}
+                                        {% set percent = appImport.getPercent(data.totals.nodes_total_disk_used, row.total, 1) %}
+                                    {% else %}
+                                        {% set percent = appImport.getPercent(data.totals.nodes_total, row.total, 1) %}
+                                    {% endif %}
+
+                                    {% set class = 'progress-bar' %}
+                                    {% set class = class ~ ' bg-' ~ appImport.getContextColor({}) %}
+
+                                    {% embed 'Embed/stats_table_row_embed.html.twig' %}
+                                        {% import 'Import/app_import.html.twig' as appImport %}
+
+                                        {% block title %}
+                                            {% if 'nodes_by_role' == key %}
+                                                {% if is_granted('NODES_LIST', 'node') %}
+                                                    <a class="text-secondary-emphasis" href="{{ path('nodes', {'roles[]': row.title}) }}">{{ ('node_roles.' ~ row.title)|trans }}</a>
+                                                {% else %}
+                                                    {{ ('node_roles.' ~ row.title)|trans }}
+                                                {% endif %}
+                                            {% elseif 'nodes_by_es_version' == key %}
+                                                {% if is_granted('NODES_LIST', 'node') and 1 < results|length %}
+                                                    <a class="text-secondary-emphasis" href="{{ path('nodes', {'version': row.title}) }}">{{ row.title }}</a>
+                                                {% else %}
+                                                    {{ row.title }}
+                                                {% endif %}
+                                            {% else %}
+                                                {{ row.title }}{% if master_node == row.title %}<span class="ml-1">{{ appImport.badge({'title': 'master'|trans, 'context': 'master_node'}) }}</span>{% endif %}
+                                            {% endif %}
+                                        {% endblock %}
+
+                                        {% block total %}
+                                            {% if 'nodes_by_disk_avail' == key or 'nodes_by_disk_used' == key %}
+                                                {{ row.total|human_filesize }}
+                                            {% else %}
+                                                {{ row.total }}
+                                            {% endif %}
+                                        {% endblock %}
+                                    {% endembed %}
+                                {% endfor %}
+                            {% endblock %}
+                        {% endembed %}
+                    {% endif %}
+                {% endfor %}
+            </div>
+        {% endblock %}
+    {% endembed %}
+{% endblock %}

@@ -1,0 +1,136 @@
+{% extends 'base.html.twig' %}
+{% import 'Import/app_import.html.twig' as appImport %}
+
+{% block head_title %}{{ 'license'|trans }}{% endblock %}
+
+{% block heading_1 %}
+    {{ appImport.heading({'level': 1, 'title': 'license'|trans}) }}
+{% endblock %}
+
+{% block tabs %}
+    {% include 'Modules/license/license_read_tabs.html.twig' with {'active': 'summary'} %}
+{% endblock %}
+
+{% block main_content %}
+    {% embed 'Embed/block_embed.html.twig' %}
+        {% import 'Import/app_import.html.twig' as appImport %}
+        {% block content %}
+            {{ appImport.heading({'level': 3, 'title': 'summary'|trans}) }}
+
+            {% embed 'Embed/buttons_embed.html.twig' %}
+                {% import 'Import/app_import.html.twig' as appImport %}
+                {% block content %}
+                    {% if true == trial_status and is_granted('LICENSE_START_TRIAL', 'global') %}
+                        {{ appImport.buttonModal({
+                            'id': 'StartTrial',
+                            'title': 'start_trial'|trans,
+                            'href': path('license_start_trial'),
+                        }) }}
+                    {% endif %}
+
+                    {% if true == basic_status and is_granted('LICENSE_START_BASIC', 'global') %}
+                        {{ appImport.buttonModal({
+                            'id': 'StartBasic',
+                            'title': 'start_basic'|trans,
+                            'body': 'help_modal.license.start_basic'|trans,
+                            'href': path('license_start_basic'),
+                        }) }}
+                    {% endif %}
+                {% endblock %}
+            {% endembed %}
+
+            <hr>
+
+            <div class="row">
+                {% if license['type'] is defined %}
+                    {{ appImport.dashboardKpi({'title': 'type'|trans, 'badge': {'title': license['type']}}) }}
+                {% endif %}
+
+                {% if license['status'] is defined %}
+                    {{ appImport.dashboardKpi({'title': 'status'|trans, 'badge': {'title': license['status']}}) }}
+                {% endif %}
+
+                {% if license['issue_date_in_millis'] is defined %}
+                    {{ appImport.dashboardKpi({'title': 'issue_date'|trans, 'badge': {'title': license['issue_date_in_millis']|human_datetime}}) }}
+                {% endif %}
+
+                {% if license['type'] is defined and 'basic' != license['type'] and license['expiry_date_in_millis'] is defined %}
+                    {{ appImport.dashboardKpi({'title': 'expiry_date'|trans, 'badge': {'title': license['expiry_date_in_millis']|human_datetime}}) }}
+                {% endif %}
+            </div>
+        {% endblock %}
+    {% endembed %}
+
+    {% if xpack['features'] is defined %}
+        {% embed 'Embed/block_embed.html.twig' %}
+            {% import 'Import/app_import.html.twig' as appImport %}
+            {% block content %}
+                {{ appImport.heading({'level': 4, 'title': 'features_xpack'|trans, 'badge': {'title': xpack['features']|length}}) }}
+
+                {% embed 'Embed/table_embed.html.twig' %}
+                    {% import 'Import/app_import.html.twig' as appImport %}
+
+                    {% block thead %}
+                        <tr>
+                            <th>{{ 'feature'|trans }}</th>
+                            <th>{{ 'available'|trans }}</th>
+                            <th>{{ 'enabled'|trans }}</th>
+                        </tr>
+                    {% endblock %}
+
+                    {% block tbody %}
+                        {% for key, value in xpack['features'] %}
+                            <tr>
+                                <td>
+                                    {{ key }}
+                                </td>
+                                <td>
+                                    {{ appImport.badge({'title': ('boolean.' ~ value['available'])|trans, 'context': value['available']}) }}
+                                </td>
+                                <td>
+                                    {{ appImport.badge({'title': ('boolean.' ~ value['enabled'])|trans, 'context': value['enabled']}) }}
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    {% endblock %}
+                {% endembed %}
+            {% endblock %}
+        {% endembed %}
+    {% endif %}
+
+    {% embed 'Embed/block_embed.html.twig' %}
+        {% import 'Import/app_import.html.twig' as appImport %}
+        {% block content %}
+            {{ appImport.heading({'level': 4, 'title': 'features_by_version'|trans, 'badge': {'title': features_by_version|length}}) }}
+
+            {% embed 'Embed/table_embed.html.twig' %}
+                {% import 'Import/app_import.html.twig' as appImport %}
+
+                {% block thead %}
+                    <tr>
+                        <th>{{ 'feature'|trans }}</th>
+                        <th>{{ 'version'|trans }}</th>
+                        <th>{{ 'enabled'|trans }}</th>
+                    </tr>
+                {% endblock %}
+
+                {% block tbody %}
+                    {% for key, value in features_by_version %}
+                        <tr>
+                            <td>
+                                {{ key }}
+                            </td>
+                            <td>
+                                {{ value }}
+                            </td>
+                            <td>
+                                {% set enabled = hasFeature(key) %}
+                                {{ appImport.badge({'title': ('boolean.' ~ enabled)|trans, 'context': enabled}) }}
+                            </td>
+                        </tr>
+                    {% endfor %}
+                {% endblock %}
+            {% endembed %}
+        {% endblock %}
+    {% endembed %}
+{% endblock %}

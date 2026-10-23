@@ -1,0 +1,146 @@
+{% embed 'Embed/table_embed.html.twig' %}
+    {% import 'Import/app_import.html.twig' as appImport %}
+
+    {% set columns = {'name': true, 'index_patterns': true, 'priority': true, 'version': true, 'composed_of': true, 'data_stream': false, 'managed': true, 'system': true} %}
+
+    {% if true == hasFeature('data_streams') %}
+        {% set columns = columns|merge({'data_stream': true}) %}
+    {% endif %}
+
+    {% set is_granted_component_templates = is_granted('COMPONENT_TEMPLATES_LIST', 'component_template') %}
+
+    {% block thead %}
+        <tr>
+            {% for column, display in columns %}
+                {% if true == display %}
+                    {% if 'name' == column %}
+                        <th>
+                            {{ 'name'|trans }}{{ appImport.badge({'title': 'sort_asc'|trans, 'context': 'secondary'}) }}
+                        </th>
+                    {% endif %}
+
+                    {% if 'index_patterns' == column %}
+                        <th>
+                            {{ 'index_patterns'|trans }}
+                        </th>
+                    {% endif %}
+
+                    {% if 'priority' == column %}
+                        <th>
+                            {{ 'priority'|trans }}
+                        </th>
+                    {% endif %}
+
+                    {% if 'version' == column %}
+                        <th class="d-none d-xl-table-cell">
+                            {{ 'version'|trans }}
+                        </th>
+                    {% endif %}
+
+                    {% if 'composed_of' == column %}
+                        <th>
+                            {{ 'composed_of'|trans }}
+                        </th>
+                    {% endif %}
+
+                    {% if 'data_stream' == column %}
+                        <th>
+                            {{ 'data_stream'|trans }}
+                        </th>
+                    {% endif %}
+
+                    {% if 'managed' == column %}
+                        <th class="d-none d-xl-table-cell">
+                            {{ 'managed'|trans }}
+                        </th>
+                    {% endif %}
+
+                    {% if 'system' == column %}
+                        <th class="d-none d-xl-table-cell">
+                            {{ 'system'|trans }}
+                        </th>
+                    {% endif %}
+                {% endif %}
+            {% endfor %}
+        </tr>
+    {% endblock %}
+
+    {% block tbody %}
+        {% for row in templates.rows %}
+            <tr>
+                {% for column, display in columns %}
+                    {% if true == display %}
+                        {% if 'name' == column %}
+                            <td>
+                                <a class="text-primary-emphasis" href="{{ path('index_templates_read', {'name': row.name}) }}">{{ row.name }}</a>
+                            </td>
+                        {% endif %}
+
+                        {% if 'index_patterns' == column %}
+                            <td>
+                                {{ row.indexPatterns|join(', ')|replace({'[': '', ']': ''}) }}
+                            </td>
+                        {% endif %}
+
+                        {% if 'priority' == column %}
+                            <td>
+                                {% if row.priority %}
+                                    {{ row.priority }}
+                                {% endif %}
+                            </td>
+                        {% endif %}
+
+                        {% if 'version' == column %}
+                            <td class="d-none d-xl-table-cell">
+                                {% if row.version %}
+                                    {{ row.version }}
+                                {% endif %}
+                            </td>
+                        {% endif %}
+
+                        {% if 'composed_of' == column %}
+                            <td>
+                                {% if row.composedOf %}
+                                    {% for componentTemplate in row.composedOf %}
+                                        {% if is_granted_component_templates %}
+                                            <a class="text-secondary-emphasis" href="{{ path('component_templates_read', {'name': componentTemplate}) }}">{{ componentTemplate }}</a>
+                                        {% else %}
+                                            {{ componentTemplate }}
+                                        {% endif %}
+                                        {% if false == loop.last %}, {% endif %}
+                                    {% endfor %}
+                                {% endif %}
+                            </td>
+                        {% endif %}
+
+                        {% if 'data_stream' == column %}
+                            <td>
+                                {% if row.dataStream %}
+                                    {{ appImport.badge({'title': 'boolean.true'|trans, 'context': 'true'}) }}
+                                {% else %}
+                                    {{ appImport.badge({'title': 'boolean.false'|trans, 'context': 'false'}) }}
+                                {% endif %}
+                            </td>
+                        {% endif %}
+
+                        {% if 'managed' == column %}
+                            <td class="d-none d-xl-table-cell">
+                                {% if row.isManaged %}
+                                    {{ appImport.badge({'title': 'boolean.true'|trans, 'context': 'true'}) }}
+                                {% else %}
+                                    {{ appImport.badge({'title': 'boolean.false'|trans, 'context': 'false'}) }}
+                                {% endif %}
+                            </td>
+                        {% endif %}
+
+                        {% if 'system' == column %}
+                            <td class="d-none d-xl-table-cell">
+                                {{ appImport.badge({'title': ('boolean.' ~ row.isSystem)|trans, 'context': row.isSystem}) }}
+                            </td>
+                        {% endif %}
+                    {% endif %}
+                {% endfor %}
+            </tr>
+        {% endfor %}
+    {% endblock %}
+{% endembed %}

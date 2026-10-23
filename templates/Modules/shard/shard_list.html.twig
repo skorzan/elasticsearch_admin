@@ -1,0 +1,276 @@
+{% embed 'Embed/table_embed.html.twig' %}
+    {% import 'Import/app_import.html.twig' as appImport %}
+
+    {% set columns = {'index': true, 'shard': true, 'type': true, 'state': true, 'unassigned_reason': true, 'documents': true, 'size': true, 'node': true, '_buttons': true} %}
+
+    {% set modalReference = 0 %}
+
+    {% set redirect_url = path('shards', app.request.query.all) %}
+
+    {% set is_granted_indices = is_granted('INDICES_LIST', 'index') %}
+
+    {% set is_granted_nodes = is_granted('NODES_LIST', 'node') %}
+
+    {% set is_granted_shards_reroute = is_granted('SHARDS_REROUTE', 'global') %}
+
+    {% set sortUrl = path('shards', app.request.query.all|filter((v, k) => k != 'sort')) %}
+
+    {% block thead %}
+        <tr>
+            {% for column, display in columns %}
+                {% if true == display %}
+                    {% if 'index' == column %}
+                        <th>
+                            {{ appImport.sort({'cat_sort': cat_sort, 'url': sortUrl, 'sort': 'index', 'title': 'index'|trans, 'default': ':asc'})}}
+                        </th>
+                    {% endif %}
+
+                    {% if 'shard' == column %}
+                        <th>
+                            {{ appImport.sort({'cat_sort': cat_sort, 'url': sortUrl, 'sort': 'shard', 'title': 'shard'|trans})}}
+                        </th>
+                    {% endif %}
+
+                    {% if 'type' == column %}
+                        <th class="d-none d-xl-table-cell">
+                            {{ appImport.sort({'cat_sort': cat_sort, 'url': sortUrl, 'sort': 'prirep', 'title': 'type'|trans})}}
+                        </th>
+                    {% endif %}
+
+                    {% if 'state' == column %}
+                        <th>
+                            {{ appImport.sort({'cat_sort': cat_sort, 'url': sortUrl, 'sort': 'state', 'title': 'state'|trans})}}
+                        </th>
+                    {% endif %}
+
+                    {% if 'unassigned_reason' == column %}
+                        <th>
+                            {{ appImport.sort({'cat_sort': cat_sort, 'url': sortUrl, 'sort': 'unassigned.reason', 'title': 'unassigned_reason'|trans})}}
+                        </th>
+                    {% endif %}
+
+                    {% if 'documents' == column %}
+                        <th class="d-none d-xl-table-cell">
+                            {{ appImport.sort({'cat_sort': cat_sort, 'url': sortUrl, 'sort': 'docs', 'title': 'documents'|trans})}}
+                        </th>
+                    {% endif %}
+
+                    {% if 'size' == column %}
+                        <th class="d-none d-xl-table-cell">
+                            {{ appImport.sort({'cat_sort': cat_sort, 'url': sortUrl, 'sort': 'store', 'title': 'size'|trans})}}
+                        </th>
+                    {% endif %}
+
+                    {% if 'node' == column %}
+                        <th>
+                            {{ appImport.sort({'cat_sort': cat_sort, 'url': sortUrl, 'sort': 'node', 'title': 'node'|trans})}}
+                        </th>
+                    {% endif %}
+
+                    {% if '_buttons' == column %}
+                        <th>
+                            &nbsp;
+                        </th>
+                    {% endif %}
+                {% endif %}
+            {% endfor %}
+        </tr>
+    {% endblock %}
+
+    {% block tbody %}
+        {% for row in shards.rows %}
+            <tr>
+                {% for column, display in columns %}
+                    {% if true == display %}
+                        {% if 'index' == column %}
+                            <td>
+                                {% if is_granted_indices %}
+                                    <a class="text-secondary-emphasis" href="{{ path('indices_read', {'index': row.index}) }}">{{ row.index }}</a>
+                                {% else %}
+                                    {{ row.index }}
+                                {% endif %}
+                            </td>
+                        {% endif %}
+
+                        {% if 'shard' == column %}
+                            <td>
+                                {{ row.number }}
+                            </td>
+                        {% endif %}
+
+                        {% if 'type' == column %}
+                            <td class="d-none d-xl-table-cell">
+                                {% if row.isPrimary %}
+                                    {{ appImport.badge({'title': 'primary'|trans, 'context': 'true'}) }}
+                                {% else %}
+                                    {{ appImport.badge({'title': 'replica'|trans, 'context': 'false'}) }}
+                                {% endif %}
+                            </td>
+                        {% endif %}
+
+                        {% if 'state' == column %}
+                            <td>
+                                {{ appImport.badge({'title': row.state|trans, 'context': row.state}) }}
+                            </td>
+                        {% endif %}
+
+                        {% if 'unassigned_reason' == column %}
+                            <td>
+                                {% if row.unassignedReason %}
+                                    {{ appImport.badge({'title': row.unassignedReason|trans, 'context': 'danger'}) }}
+                                {% endif %}
+                            </td>
+                        {% endif %}
+
+                        {% if 'documents' == column %}
+                            <td class="d-none d-xl-table-cell">
+                                {{ row.documents }}
+                            </td>
+                        {% endif %}
+
+                        {% if 'size' == column %}
+                            <td class="d-none d-xl-table-cell">
+                                {% if row.size %}
+                                    {{ row.size|human_filesize }}
+                                {% endif %}
+                            </td>
+                        {% endif %}
+
+                        {% if 'node' == column %}
+                            <td>
+                                {% if row.node %}
+                                    {% if is_granted_nodes and 'relocating' != row.state %}
+                                        <a class="text-secondary-emphasis" href="{{ path('nodes_read', {'node': row.node}) }}">{{ row.node }}</a>
+                                    {% else %}
+                                        {{ row.node }}
+                                    {% endif %}
+                                    {% if master_node == row.node %}{{ appImport.badge({'title': 'master'|trans, 'context': 'master_node'}) }}{% endif %}
+                                {% endif %}
+                            </td>
+                        {% endif %}
+
+                        {% if '_buttons' == column %}
+                            <td>
+                                {% if is_granted_shards_reroute and 'relocating' != row.state %}
+                                    {% if nodesAvailable[row.index][row.number] is defined and 0 < nodesAvailable[row.index][row.number]|length and row.node %}
+                                        {% embed 'Embed/shard_reroute_cluster_embed.html.twig' with {'title': 'reroute_commands.move'|trans, 'form_action': path('shards_move', {'index': row.index, 'number': row.number})} %}
+                                            {% block content %}
+                                                <p>
+                                                    <strong>{{ 'from_node'|trans }}</strong><br>
+                                                    {{ row.node }}
+                                                </p>
+
+                                                <input type="hidden" name="redirect" value="{{ redirect_url }}">
+                                                <input type="hidden" name="from_node" value="{{ row.node }}">
+                                                <div class="form-group mb-3">
+                                                    <label for="move-to-{{ row.node }}" class="form-label"><strong>{{ 'to_node'|trans }}</strong></label>
+                                                    <select id="move-to-{{ row.node }}" class="form-control" name="to_node" required="required">
+                                                        <option value="">-</option>
+                                                        {% for nodeAvailable in nodesAvailable[row.index][row.number] %}
+                                                            <option value="{{ nodeAvailable }}">{{ nodeAvailable }}</option>
+                                                        {% endfor %}
+                                                    </select>
+                                                </div>
+                                            {% endblock %}
+                                        {% endembed %}
+                                        {% set modalReference = modalReference + 1 %}
+                                    {% endif %}
+
+                                    {% if row.node %}
+                                        {% embed 'Embed/shard_reroute_cluster_embed.html.twig' with {'title': 'reroute_commands.cancel'|trans, 'form_action': path('shards_cancel_allocation', {'index': row.index, 'number': row.number})} %}
+                                            {% block content %}
+                                                <p>
+                                                    <strong>{{ 'node'|trans }}</strong><br>
+                                                    {{ row.node }}
+                                                </p>
+
+                                                <input type="hidden" name="redirect" value="{{ redirect_url }}">
+                                                <input type="hidden" name="node" value="{{ row.node }}">
+                                            {% endblock %}
+                                        {% endembed %}
+                                        {% set modalReference = modalReference + 1 %}
+                                    {% endif %}
+
+                                    {% if nodesAvailable[row.index][row.number] is defined and 0 < nodesAvailable[row.index][row.number]|length and 'unassigned' == row.state %}
+                                        {% embed 'Embed/shard_reroute_cluster_embed.html.twig' with {'title': 'reroute_commands.allocate_replica'|trans, 'form_action': path('shards_allocate_replica', {'index': row.index, 'number': row.number})} %}
+                                            {% block content %}
+                                                <input type="hidden" name="redirect" value="{{ redirect_url }}">
+                                                <div class="form-group mb-3">
+                                                    <label for="allocate-to-{{ row.node }}" class="form-label"><strong>{{ 'node'|trans }}</strong></label>
+                                                    <select id="allocate-to-{{ row.node }}" class="form-control" name="node" required="required">
+                                                        <option value="">-</option>
+                                                        {% for nodeAvailable in nodesAvailable[row.index][row.number] %}
+                                                            <option value="{{ nodeAvailable }}">{{ nodeAvailable }}</option>
+                                                        {% endfor %}
+                                                    </select>
+                                                </div>
+                                            {% endblock %}
+                                        {% endembed %}
+                                        {% set modalReference = modalReference + 1 %}
+                                    {% endif %}
+                                {% endif %}
+
+                                {% if row.unassignedDetails %}
+                                        <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#modal{{ modalReference }}">
+                                            {{ 'unassigned_details'|trans }}
+                                        </button>
+                                        <div class="modal fade" id="modal{{ modalReference }}" tabindex="-1" role="dialog" aria-labelledby="modalLabel{{ modalReference }}" aria-hidden="true">
+                                            <div class="modal-dialog modal-lg" role="document">
+                                                <div class="modal-content bg-dark">
+                                                    <div class="modal-header">
+                                                        <h5 class="modal-title" id="modalLabel{{ modalReference }}">{{ 'unassigned_details'|trans }}</h5>
+                                                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="{{ 'cancel'|trans }}"></button>
+                                                    </div>
+                                                    <div class="modal-body text-left">
+                                                        <p>
+                                                            <strong>{{ 'index'|trans }}</strong><br>
+                                                            {{ row.index }}
+                                                        </p>
+                                                        <p>
+                                                            <strong>{{ 'shard'|trans }}</strong><br>
+                                                            {{ row.number }}
+                                                        </p>
+                                                        <p>
+                                                            <strong>{{ 'type'|trans }}</strong><br>
+                                                            {% if row.isPrimary %}
+                                                                {{ appImport.badge({'title': 'primary'|trans, 'context': 'true'}) }}
+                                                            {% else %}
+                                                                {{ appImport.badge({'title': 'replica'|trans, 'context': 'false'}) }}
+                                                            {% endif %}
+                                                        </p>
+                                                        <p>
+                                                            <strong>{{ 'state'|trans }}</strong><br>
+                                                            {{ appImport.badge({'title': row.state|trans, 'context': row.state}) }}
+                                                        </p>
+                                                        {% if row.unassignedReason %}
+                                                            <p>
+                                                                <strong>{{ 'unassigned_reason'|trans }}</strong><br>
+                                                                {{ appImport.badge({'title': row.unassignedReason|trans, 'context': 'danger'}) }}
+                                                            </p>
+                                                        {% endif %}
+                                                        {% if row.node %}
+                                                            <p>
+                                                                <strong>{{ 'node'|trans }}</strong><br>
+                                                                {{ row.node }}
+                                                            </p>
+                                                        {% endif %}
+                                                        <p>
+                                                            {{ row.unassignedDetails }}
+                                                        </p>
+                                                    </div>
+                                                    <div class="modal-footer">
+                                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ 'close'|trans }}</button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        {% set modalReference = modalReference + 1 %}
+                                {% endif %}
+                            </td>
+                        {% endif %}
+                    {% endif %}
+                {% endfor %}
+            </tr>
+        {% endfor %}
+    {% endblock %}
+{% endembed %}

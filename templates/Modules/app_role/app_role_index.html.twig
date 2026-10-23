@@ -1,0 +1,33 @@
+{% extends 'base.html.twig' %}
+{% import 'Import/app_import.html.twig' as appImport %}
+
+{% block head_title %}{{ 'app_roles'|trans }}{% endblock %}
+
+{% block heading_1 %}
+    {{ appImport.heading({'level': 1, 'title': 'app_roles'|trans}) }}
+{% endblock %}
+
+{% block tabs %}
+    {% include 'Modules/app_role/app_role_tabs.html.twig' with {'active': 'list'} %}
+{% endblock %}
+
+{% block main_content %}
+    <div class="jumbotron mt-3 bg-secondary-subtle border">
+        <p class="lead">{{ 'app_users_note'|trans|raw }}</p>
+    </div>
+
+    {% embed 'Embed/block_embed.html.twig' %}
+        {% import 'Import/app_import.html.twig' as appImport %}
+        {% block content %}
+            {{ appImport.heading({'level': 3, 'title': 'list'|trans, 'badge': {'title': roles.total}}) }}
+
+            {% if 0 < roles.total %}
+                {{ appImport.paginator(roles) }}
+
+                {% include 'Modules/app_role/app_role_list.html.twig' with {'roles': roles} %}
+
+                {{ appImport.paginator(roles) }}
+            {% endif %}
+        {% endblock %}
+    {% endembed %}
+{% endblock %}

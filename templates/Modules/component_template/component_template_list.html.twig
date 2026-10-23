@@ -1,0 +1,77 @@
+{% embed 'Embed/table_embed.html.twig' %}
+    {% import 'Import/app_import.html.twig' as appImport %}
+
+    {% set columns = {'name': true, 'version': true, 'description': true, 'managed': true} %}
+
+    {% block thead %}
+        <tr>
+            {% for column, display in columns %}
+                {% if true == display %}
+                    {% if 'name' == column %}
+                        <th>
+                            {{ 'name'|trans }}{{ appImport.badge({'title': 'sort_asc'|trans, 'context': 'secondary'}) }}
+                        </th>
+                    {% endif %}
+
+                    {% if 'version' == column %}
+                        <th>
+                            {{ 'version'|trans }}
+                        </th>
+                    {% endif %}
+
+                    {% if 'description' == column %}
+                        <th>
+                            {{ 'description'|trans }}
+                        </th>
+                    {% endif %}
+
+                    {% if 'managed' == column %}
+                        <th>
+                            {{ 'managed'|trans }}
+                        </th>
+                    {% endif %}
+                {% endif %}
+            {% endfor %}
+        </tr>
+    {% endblock %}
+
+    {% block tbody %}
+        {% for row in templates.rows %}
+            <tr>
+                {% for column, display in columns %}
+                    {% if true == display %}
+                        {% if 'name' == column %}
+                            <td>
+                                <a class="text-primary-emphasis" href="{{ path('component_templates_read', {'name': row.name}) }}">{{ row.name }}</a>
+                            </td>
+                        {% endif %}
+
+                        {% if 'version' == column %}
+                            <td>
+                                {{ row.version }}
+                            </td>
+                        {% endif %}
+
+                        {% if 'description' == column %}
+                            <td>
+                                {% if row.metadata and row.metadata.description is defined %}
+                                    {{ row.metadata.description }}
+                                {% endif %}
+                            </td>
+                        {% endif %}
+
+                        {% if 'managed' == column %}
+                            <td>
+                                {% if row.isManaged %}
+                                    {{ appImport.badge({'title': 'boolean.true'|trans, 'context': 'true'}) }}
+                                {% else %}
+                                    {{ appImport.badge({'title': 'boolean.false'|trans, 'context': 'false'}) }}
+                                {% endif %}
+                            </td>
+                        {% endif %}
+                    {% endif %}
+                {% endfor %}
+            </tr>
+        {% endfor %}
+    {% endblock %}
+{% endembed %}

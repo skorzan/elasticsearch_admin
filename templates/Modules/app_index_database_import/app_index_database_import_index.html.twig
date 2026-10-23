@@ -1,0 +1,184 @@
+{% extends 'base.html.twig' %}
+{% import 'Import/app_import.html.twig' as appImport %}
+
+{% block head_title %}{{ 'indices'|trans }} - {{ index.name }} - {{ 'import_from_database'|trans }}{% endblock %}
+
+{% block heading_1 %}
+    {{ appImport.heading({'level': 1, 'title': 'indices'|trans, 'link': {'url': path('indices')}}) }}
+{% endblock %}
+
+{% block heading_2 %}
+    {{ appImport.heading({'level': 2, 'title': index.name, 'badge': {'title': index.health|trans, 'context': index.health}}) }}
+{% endblock %}
+
+{% block tabs %}
+    {% include 'Modules/index/index_read_tabs.html.twig' with {'active': 'import_from_database'} %}
+{% endblock %}
+
+{% block importmap %}
+    {{ importmap(['app', 'app-database']) }}
+{% endblock %}
+
+{% block main_content %}
+    {% embed 'Embed/block_embed.html.twig' %}
+        {% import 'Import/app_import.html.twig' as appImport %}
+        {% block content %}
+            {{ appImport.heading({'level': 3, 'title': 'import_from_database'|trans}) }}
+
+            <div class="row step" id="step-connect">
+                <div class="col-12">
+                    {{ appImport.heading({'level': 4, 'title': 'database.connect'|trans, 'badge': {'title': '1/4'}}) }}
+                </div>
+
+                <div class="col-12 col-md-5 col-lg-4">
+                    <form name="data" method="post" action="{{ path('index_database_import_connect', {'index': index.name}) }}" id="form-connect">
+                        <div class="form-group mb-3">
+                            <label class="required form-label" for="driver">{{ 'database.driver'|trans }}</label>
+                            <select id="driver" name="driver" required="required" class="form-control">
+                                <option value="">-</option>
+                                {% for driver in drivers %}
+                                    <option value="{{ driver }}">{{ driver }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <div class="form-group mb-3">
+                            <label for="host" class="required form-label">{{ 'database.host'|trans }}</label>
+                            <input type="text" id="host" name="host" required="required" class="form-control">
+                        </div>
+
+                        <div class="form-group mb-3">
+                            <label for="user" class="required form-label">{{ 'database.user'|trans }}</label>
+                            <input type="text" id="user" name="user" required="required" autocomplete="nope" class="form-control">
+                        </div>
+
+                        <div class="form-group mb-3">
+                            <label for="password" class="required form-label">{{ 'database.password'|trans }}</label>
+                            <input type="password" id="password" name="password" required="required" autocomplete="new-password" class="form-control">
+                        </div>
+
+                        <div class="form-group mb-3">
+                            <label for="dbname" class="required form-label">{{ 'database.dbname'|trans }}</label>
+                            <input type="text" id="dbname" name="dbname" required="required" class="form-control">
+                        </div>
+                    </div>
+
+                    <div class="col-12 col-md-5 col-lg-4">
+                        <div class="form-group mb-3">
+                            <label for="query" class="required form-label">{{ 'database.query'|trans }}</label>
+                            <textarea id="query" name="query" required="required" class="form-control"></textarea>
+                        </div>
+
+                        <div class="form-group mb-3">
+                            <button type="submit" class="btn btn-primary">{{ 'submit'|trans }}</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <div class="row step d-none" id="step-mappings">
+                <div class="col-12">
+                    {{ appImport.heading({'level': 4, 'title': 'database.mappings'|trans, 'badge': {'title': '2/4'}}) }}
+                </div>
+
+                <div class="col-12">
+                    <div class="mb-3">
+                        <a href="#step-connect" class="btn btn-secondary btn-sm back">{{ 'back'|trans }}</a>
+                    </div>
+
+                    <form name="data" method="post" action="{{ path('index_database_import_mappings', {'index': index.name}) }}" id="form-mappings">
+                        {% embed 'Embed/table_embed.html.twig' %}
+                            {% import 'Import/app_import.html.twig' as appImport %}
+
+                            {% block thead %}
+                                <tr>
+                                    <th>{{ 'field'|trans }}</th>
+                                    <th>{{ 'type'|trans }}</th>
+                                    <th>&nbsp;</th>
+                                </tr>
+                            {% endblock %}
+
+                            {% block tbody %}
+                                <tr>
+                                    <td>_id</td>
+                                    <td>meta</td>
+                                    <td>
+                                        <select id="_id" name="_id" class="form-control select-column" data-field="_id">
+                                        </select>
+                                    </td>
+                                </tr>
+                                {% for field, mapping in index.mappingsFlat %}
+                                    <tr>
+                                        <td><label for="{{ field }}">{{ field }}</label></td>
+                                        <td>{{ mapping['type'] }}</td>
+                                        <td>
+                                            <select id="{{ field }}" name="{{ field|replace({'.': '_DOT_'}) }}" class="form-control select-column" data-field="{{ field }}">
+                                            </select>
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            {% endblock %}
+                        {% endembed %}
+
+                        <div class="form-group mb-3">
+                            <button type="submit" class="btn btn-primary">{{ 'submit'|trans }}</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <div class="row step d-none" id="step-loading">
+                <div class="col-12">
+                    {{ appImport.heading({'level': 4, 'title': 'database.loading'|trans, 'badge': {'title': '3/4'}}) }}
+                </div>
+
+                <div class="col-12">
+                    <div class="spinner-border" role="status">
+                        <span class="visually-hidden">{{ 'loading'|trans }}...</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row step d-none" id="step-completed">
+                <div class="col-12">
+                    {{ appImport.heading({'level': 4, 'title': 'database.import_completed'|trans, 'badge': {'title': '4/4'}}) }}
+                </div>
+
+                <div class="col-12">
+                    <div class="mb-3">
+                        <a href="#step-mappings" class="btn btn-secondary btn-sm back">{{ 'back'|trans }}</a>
+                    </div>
+
+                    <hr>
+
+                    <div class="row">
+                        <div class="text-center mb-4 col-12 col-md-4 col-lg-3">
+                            <h4>{{ 'documents'|trans }}</h4>
+                            <h3><span class="badge bg-info text-light"></span></h3>
+                        </div>
+                    </div>
+
+                    <div class="table-responsive d-none" id="errors">
+                        <h4>{{ 'errors'|trans }}</h4>
+
+                        <table class="table table-hover table-sm">
+
+                        <thead>
+                            <tr>
+                                <th>{{ 'id'|trans }}</th>
+                                <th>{{ 'status'|trans }}</th>
+                                <th>{{ 'message'|trans }}</th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+                        </tbody>
+
+                        </table>
+                    </div>
+
+                </div>
+            </div>
+        {% endblock %}
+    {% endembed %}
+{% endblock %}

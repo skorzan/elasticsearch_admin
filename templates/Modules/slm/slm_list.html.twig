@@ -1,0 +1,101 @@
+{% embed 'Embed/table_embed.html.twig' %}
+    {% import 'Import/app_import.html.twig' as appImport %}
+
+    {% set columns = {'name': true, 'snapshot_name': true, 'repository': true, 'schedule': true, 'next_execution': true, 'version': true} %}
+
+    {% set is_granted_repositories = is_granted('REPOSITORIES_LIST', 'repository') %}
+
+    {% block thead %}
+        <tr>
+            {% for column, display in columns %}
+                {% if true == display %}
+                    {% if 'name' == column %}
+                        <th>
+                            {{ 'name'|trans }}{{ appImport.badge({'title': 'sort_asc'|trans, 'context': 'secondary'}) }}
+                        </th>
+                    {% endif %}
+
+                    {% if 'snapshot_name' == column %}
+                        <th>
+                            {{ 'snapshot_name'|trans }}
+                        </th>
+                    {% endif %}
+
+                    {% if 'repository' == column %}
+                        <th>
+                            {{ 'repository'|trans }}
+                        </th>
+                    {% endif %}
+
+                    {% if 'schedule' == column %}
+                        <th>
+                            {{ 'schedule'|trans }}
+                        </th>
+                    {% endif %}
+
+                    {% if 'next_execution' == column %}
+                        <th>
+                            {{ 'next_execution'|trans }}
+                        </th>
+                    {% endif %}
+
+                    {% if 'version' == column %}
+                        <th>
+                            {{ 'version'|trans }}
+                        </th>
+                    {% endif %}
+                {% endif %}
+            {% endfor %}
+        </tr>
+    {% endblock %}
+
+    {% block tbody %}
+        {% for row in policies.rows %}
+            <tr>
+                {% for column, display in columns %}
+                    {% if true == display %}
+                        {% if 'name' == column %}
+                            <td>
+                                <a class="text-primary-emphasis" href="{{ path('slm_read', {'name': row.name}) }}">{{ row.name }}</a>
+                            </td>
+                        {% endif %}
+
+                        {% if 'snapshot_name' == column %}
+                            <td>
+                                {{ row.snapshotName }}
+                            </td>
+                        {% endif %}
+
+                        {% if 'repository' == column %}
+                            <td>
+                                {% if is_granted_repositories %}
+                                    <a class="text-secondary-emphasis" href="{{ path('repositories_read', {'repository': row.repository}) }}">{{ row.repository }}</a>
+                                {% else %}
+                                    {{ row.repository }}
+                                {% endif %}
+                            </td>
+                        {% endif %}
+
+                        {% if 'schedule' == column %}
+                            <td>
+                                {{ row.schedule }}
+                            </td>
+                        {% endif %}
+
+                        {% if 'next_execution' == column %}
+                            <td>
+                                {{ row.nextExecution|human_datetime }}
+                            </td>
+                        {% endif %}
+
+                        {% if 'version' == column %}
+                            <td>
+                                {{ row.version }}
+                            </td>
+                        {% endif %}
+                    {% endif %}
+                {% endfor %}
+            </tr>
+        {% endfor %}
+    {% endblock %}
+{% endembed %}

@@ -1,0 +1,144 @@
+{% embed 'Embed/table_embed.html.twig' %}
+    {% import 'Import/app_import.html.twig' as appImport %}
+
+    {% set sortUrl = path('indices_read_search', {'index': index.name}|merge(app.request.query.all|filter((v, k) => k != 'sort'))) %}
+
+    {% set modalReference = 0 %}
+
+    {% block thead %}
+        <tr>
+            <th>&nbsp;</th>
+            <th class="text-nowrap">
+                {{ appImport.sort({'cat_sort': cat_sort, 'url': sortUrl, 'sort': '_id', 'title': '_id'})}}
+            </th>
+            <th class="text-nowrap">
+                {{ appImport.sort({'cat_sort': cat_sort, 'url': sortUrl, 'sort': '_score', 'title': '_score', 'default': ':desc'})}}
+            </th>
+            {% for field, type in index.mappingsFlat %}
+                <th class="text-nowrap">
+                    {% set sort = retrieve_sort(index, field) %}
+                    {% if true == sort %}
+                        {{ appImport.sort({'cat_sort': cat_sort, 'url': sortUrl, 'sort': sort, 'title': field})}}
+                    {% else %}
+                        {{ field }}
+                    {% endif %}
+                </th>
+            {% endfor %}
+        </tr>
+    {% endblock %}
+
+    {% block tbody %}
+        {% for row in documents.rows %}
+            <tr>
+                <td>
+                    <button type="button" class="btn btn-info btn-sm" data-bs-toggle="modal" data-bs-target="#modal{{ modalReference }}">
+                        {{ 'source'|trans }}
+                    </button>
+
+                    <div class="modal fade" id="modal{{ modalReference }}" tabindex="-1" role="dialog" aria-labelledby="modalLabel{{ modalReference }}" aria-hidden="true">
+                        <div class="modal-dialog modal-xl">
+                            <div class="modal-content bg-dark">
+                                <div class="modal-header">
+                                    <h5 class="modal-title" id="modalLabel{{ modalReference }}">#{{ row['_id'] }} ({{ 'source'|trans }})</h5>
+                                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="{{ 'close'|trans }}"></button>
+                                </div>
+                                <div class="modal-body">
+                                    <pre>{{ row['_source']|json_encode(constant('JSON_PRETTY_PRINT')) }}</pre>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% set modalReference = modalReference + 1 %}
+                </td>
+                <td>
+                    {{ row['_id'] }}
+                </td>
+                <td>
+                    {{ row['_score'] }}
+                </td>
+                {% for field, mapping in index.mappingsFlat %}
+                    <td>
+                        {% if true == hasFeature('search_option_fields') %}
+                            {% set value = row['fields'][field] ?? null %}
+                        {% else %}
+                            {% set value = retrieve_value(row['_source'], field) %}
+                        {% endif %}
+                        {% if value %}
+                            {% if value is iterable and 1 == value|length %}
+                                {% set value = value|first %}
+                            {% endif %}
+                            {% if value is iterable %}
+                                {% if 'geo_point' == mapping['type'] and value['lat'] is defined and value['lon'] is defined %}
+                                    <a class="btn btn-info btn-sm ml-1" rel="noreferrer" target="_blank" href="https://www.google.com/maps?q={{ value['lat'] }},{{ value['lon'] }}&amp;z=15">{{ 'map'|trans }}</a>
+                                {% else %}
+                                    {% if 'keyword' == mapping['type'] %}
+                                        <ul class="list-unstyled">
+                                            {% for fieldSub, valueSub in value %}
+                                                {% if valueSub is iterable %}
+                                                    <li>{{ appImport.badge({'title': 'array'|trans, 'context': 'secondary'}) }}</li>
+                                                {% else %}
+                                                    <li>{{ valueSub }}</li>
+                                                {% endif %}
+                                            {% endfor %}
+                                        </ul>
+                                    {% else %}
+                                        <button type="button" class="btn btn-info btn-sm" data-bs-toggle="modal" data-bs-target="#modal{{ modalReference }}">
+                                            {{ 'array'|trans }}
+                                        </button>
+
+                                        <div class="modal fade" id="modal{{ modalReference }}" tabindex="-1" role="dialog" aria-labelledby="modalLabel{{ modalReference }}" aria-hidden="true">
+                                            <div class="modal-dialog modal-xl">
+                                                <div class="modal-content bg-dark">
+                                                    <div class="modal-header">
+                                                        <h5 class="modal-title" id="modalLabel{{ modalReference }}">#{{ row['_id'] }} ({{ field }})</h5>
+                                                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="{{ 'close'|trans }}"></button>
+                                                    </div>
+                                                    <div class="modal-body">
+                                                        <pre>{{ value|json_encode(constant('JSON_PRETTY_PRINT')) }}</pre>
+                                                    </div>
+                                                    <div class="modal-footer">
+                                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        {% set modalReference = modalReference + 1 %}
+                                    {% endif %}
+                                {% endif %}
+                            {% else %}
+                                {% if 500 < value|length %}
+                                    <button type="button" class="btn btn-info btn-sm" data-bs-toggle="modal" data-bs-target="#modal{{ modalReference }}">
+                                        {{ 'long_text'|trans }}
+                                    </button>
+
+                                    <div class="modal fade" id="modal{{ modalReference }}" tabindex="-1" role="dialog" aria-labelledby="modalLabel{{ modalReference }}" aria-hidden="true">
+                                        <div class="modal-dialog modal-xl">
+                                            <div class="modal-content bg-dark">
+                                                <div class="modal-header">
+                                                    <h5 class="modal-title" id="modalLabel{{ modalReference }}">#{{ row['_id'] }} ({{ field }})</h5>
+                                                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="{{ 'close'|trans }}"></button>
+                                                </div>
+                                                <div class="modal-body">
+                                                    <pre>{{ value }}</pre>
+                                                </div>
+                                                <div class="modal-footer">
+                                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    {% set modalReference = modalReference + 1 %}
+                                {% else %}
+                                    {{ value }}
+                                {% endif %}
+                            {% endif %}
+                        {% endif %}
+                    </td>
+                {% endfor %}
+            </tr>
+        {% endfor %}
+    {% endblock %}
+{% endembed %}

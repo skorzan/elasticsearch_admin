@@ -1,0 +1,101 @@
+{% extends 'base.html.twig' %}
+{% import 'Import/app_import.html.twig' as appImport %}
+
+{% block head_title %}{{ 'indices'|trans }} - {{ 'stats'|trans }}{% endblock %}
+
+{% block heading_1 %}
+    {{ appImport.heading({'level': 1, 'title': 'indices'|trans}) }}
+{% endblock %}
+
+{% block tabs %}
+    {% include 'Modules/index/index_tabs.html.twig' with {'active': 'stats'} %}
+{% endblock %}
+
+{% block main_content %}
+    {% embed 'Embed/block_embed.html.twig' %}
+        {% import 'Import/app_import.html.twig' as appImport %}
+        {% block content %}
+            {{ appImport.form({'form': form, 'type': 'search'}) }}
+        {% endblock %}
+    {% endembed %}
+
+    {% embed 'Embed/block_embed.html.twig' %}
+        {% import 'Import/app_import.html.twig' as appImport %}
+        {% block content %}
+            {{ appImport.heading({'level': 3, 'title': 'stats'|trans}) }}
+
+            <hr>
+
+            <div class="row">
+                {% for key, total in data.totals %}
+                    {% if 'indices_primary_size' == key %}
+                        {{ appImport.dashboardKpi({'title': ('stats_data.' ~ key)|trans, 'badge': {'title': total|human_filesize}}) }}
+                    {% else %}
+                        {{ appImport.dashboardKpi({'title': ('stats_data.' ~ key)|trans, 'badge': {'title': total}}) }}
+                    {% endif %}
+                {% endfor %}
+            </div>
+
+            <hr>
+
+            <div class="row row-cols-1 row-cols-md-2 g-4">
+                {% for key, results in data.tables %}
+                    {% if 0 < results|length %}
+                        {% embed 'Embed/stats_table_embed.html.twig' %}
+                            {% import 'Import/app_import.html.twig' as appImport %}
+
+                            {% block title %}{{ ('stats_data.' ~ key)|trans }}{% endblock %}
+
+                            {% block content %}
+                                {% for row in results %}
+                                    {% if 'indices_by_documents' == key %}
+                                        {% set percent = appImport.getPercent(data.totals.indices_total_documents, row.total, 1) %}
+                                    {% elseif 'indices_by_primary_size' == key %}
+                                        {% set percent = appImport.getPercent(data.totals.indices_primary_size, row.total, 1) %}
+                                    {% else %}
+                                        {% set percent = appImport.getPercent(data.totals.indices_total, row.total, 1) %}
+                                    {% endif %}
+
+                                    {% set class = 'progress-bar' %}
+                                    {% if key in ['indices_by_status', 'indices_by_health'] %}
+                                        {% set class = class ~ ' bg-' ~ appImport.getContextColor({'context': row.title}) %}
+                                    {% else %}
+                                        {% set class = class ~ ' bg-' ~ appImport.getContextColor({}) %}
+                                    {% endif %}
+
+                                    {% embed 'Embed/stats_table_row_embed.html.twig' %}
+                                        {% block title %}
+                                            {% if key in ['indices_by_documents', 'indices_by_primary_size'] %}
+                                                {% if is_granted('INDICES_LIST', 'index') %}
+                                                    <a class="text-secondary-emphasis" href="{{ path('indices_read', {'index': row.title}) }}">{{ row.title }}</a>
+                                                {% else %}
+                                                    {{ row.title }}
+                                                {% endif %}
+                                            {% elseif key in ['indices_by_status'] and is_granted('INDICES_LIST', 'index') %}
+                                                <a class="text-secondary-emphasis" href="{{ path('indices', {'status': row.title}) }}">{{ row.title|trans }}</a>
+                                            {% elseif key in ['indices_by_health'] and is_granted('INDICES_LIST', 'index') %}
+                                                <a class="text-secondary-emphasis" href="{{ path('indices', {'health[]': row.title}) }}">{{ row.title|trans }}</a>
+                                            {% elseif key in ['indices_by_primary_shards', 'indices_by_replicas'] %}
+                                                {{ row.title }}
+                                            {% else %}
+                                                {{ row.title|trans }}
+                                            {% endif %}
+                                        {% endblock %}
+
+                                        {% block total %}
+                                            {% if 'indices_by_primary_size' == key %}
+                                                {{ row.total|human_filesize }}
+                                            {% else %}
+                                                {{ row.total }}
+                                            {% endif %}
+                                        {% endblock %}
+                                    {% endembed %}
+                                {% endfor %}
+                            {% endblock %}
+                        {% endembed %}
+                    {% endif %}
+                {% endfor %}
+            </div>
+        {% endblock %}
+    {% endembed %}
+{% endblock %}

@@ -1,0 +1,36 @@
+{% extends 'base.html.twig' %}
+{% import 'Import/app_import.html.twig' as appImport %}
+
+{% block head_title %}{{ 'tasks'|trans }}{% endblock %}
+
+{% block heading_1 %}
+    {{ appImport.heading({'level': 1, 'title': 'tasks'|trans}) }}
+{% endblock %}
+
+{% block tabs %}
+    {% include 'Modules/task/task_tabs.html.twig' with {'active': 'list'} %}
+{% endblock %}
+
+{% block main_content %}
+    {% embed 'Embed/block_embed.html.twig' %}
+        {% import 'Import/app_import.html.twig' as appImport %}
+        {% block content %}
+            {{ appImport.form({'form': form, 'type': 'search'}) }}
+        {% endblock %}
+    {% endembed %}
+
+    {% embed 'Embed/block_embed.html.twig' %}
+        {% import 'Import/app_import.html.twig' as appImport %}
+        {% block content %}
+            {{ appImport.heading({'level': 3, 'title': 'list'|trans, 'badge': {'title': tasks.total}}) }}
+
+            {% if 0 < tasks.total %}
+                {{ appImport.paginator(tasks) }}
+
+                {% include 'Modules/task/task_list.html.twig' with {'tasks': tasks} %}
+
+                {{ appImport.paginator(tasks) }}
+            {% endif %}
+        {% endblock %}
+    {% endembed %}
+{% endblock %}

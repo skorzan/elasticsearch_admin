@@ -1,0 +1,47 @@
+{% embed 'Embed/table_embed.html.twig' %}
+    {% import 'Import/app_import.html.twig' as appImport %}
+
+    {% set columns = {'name': true, 'created_at': true} %}
+
+    {% block thead %}
+        <tr>
+            {% for column, display in columns %}
+                {% if true == display %}
+                    {% if 'name' == column %}
+                        <th>
+                            {{ 'name'|trans }}{{ appImport.badge({'title': 'sort_asc'|trans, 'context': 'secondary'}) }}
+                        </th>
+                    {% endif %}
+
+                    {% if 'created_at' == column %}
+                        <th>
+                            {{ 'created_at'|trans }}
+                        </th>
+                    {% endif %}
+                {% endif %}
+            {% endfor %}
+        </tr>
+    {% endblock %}
+
+    {% block tbody %}
+        {% for row in roles.rows %}
+            <tr>
+                {% for column, display in columns %}
+                    {% if true == display %}
+                        {% if 'name' == column %}
+                            <td>
+                                <a class="text-primary-emphasis" href="{{ path('app_roles_read', {'role': row.name}) }}">{{ row.name }}</a>
+                            </td>
+                        {% endif %}
+
+                        {% if 'created_at' == column %}
+                            <td>
+                                {{ row.createdAt|human_datetime }}
+                            </td>
+                        {% endif %}
+                    {% endif %}
+                {% endfor %}
+            </tr>
+        {% endfor %}
+    {% endblock %}
+{% endembed %}

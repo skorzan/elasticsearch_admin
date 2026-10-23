@@ -1,0 +1,63 @@
+{% embed 'Embed/table_embed.html.twig' %}
+    {% import 'Import/app_import.html.twig' as appImport %}
+
+    {% set columns = {'id': true, 'type': true, 'managed': true} %}
+
+    {% block thead %}
+        <tr>
+            {% for column, display in columns %}
+                {% if true == display %}
+                    {% if 'id' == column %}
+                        <th>
+                            {{ 'name'|trans }}{{ appImport.badge({'title': 'sort_asc'|trans, 'context': 'secondary'}) }}
+                        </th>
+                    {% endif %}
+
+                    {% if 'type' == column %}
+                        <th>
+                            {{ 'type'|trans }}
+                        </th>
+                    {% endif %}
+
+                    {% if 'managed' == column %}
+                        <th>
+                            {{ 'managed'|trans }}
+                        </th>
+                    {% endif %}
+                {% endif %}
+            {% endfor %}
+        </tr>
+    {% endblock %}
+
+    {% block tbody %}
+        {% for row in repositories.rows %}
+            <tr>
+                {% for column, display in columns %}
+                    {% if true == display %}
+                        {% if 'id' == column %}
+                            <td>
+                                <a class="text-primary-emphasis" href="{{ path('repositories_read', {'repository': row.name}) }}">{{ row.name }}</a>
+                            </td>
+                        {% endif %}
+
+                        {% if 'type' == column %}
+                            <td>
+                                {{ ('repository_' ~ row.type)|trans }}
+                            </td>
+                        {% endif %}
+
+                        {% if 'managed' == column %}
+                            <td>
+                                {% if cluster_settings['cluster.metadata.managed_repository'] is defined and cluster_settings['cluster.metadata.managed_repository'] == row.name %}
+                                    {{ appImport.badge({'title': 'boolean.true'|trans, 'context': 'true'}) }}
+                                {% else %}
+                                    {{ appImport.badge({'title': 'boolean.false'|trans, 'context': 'false'}) }}
+                                {% endif %}
+                            </td>
+                        {% endif %}
+                    {% endif %}
+                {% endfor %}
+            </tr>
+        {% endfor %}
+    {% endblock %}
+{% endembed %}

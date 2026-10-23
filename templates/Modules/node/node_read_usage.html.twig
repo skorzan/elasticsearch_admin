@@ -1,0 +1,47 @@
+{% extends 'base.html.twig' %}
+{% import 'Import/app_import.html.twig' as appImport %}
+
+{% block head_title %}{{ 'nodes'|trans }} - {{ node.name }} - {{ 'usage'|trans }}{% endblock %}
+
+{% block heading_1 %}
+    {{ appImport.heading({'level': 1, 'title': 'nodes'|trans, 'link': {'url': path('nodes')}}) }}
+{% endblock %}
+
+{% block heading_2 %}
+    {% if master_node == node.name %}
+        {{ appImport.heading({'level': 2, 'title': node.name, 'badge': {'title': 'master'|trans, 'context': 'master_node'}}) }}
+    {% else %}
+        {{ appImport.heading({'level': 2, 'title': node.name}) }}
+    {% endif %}
+{% endblock %}
+
+{% block tabs %}
+    {% include 'Modules/node/node_read_tabs.html.twig' with {'active': 'usage'} %}
+{% endblock %}
+
+{% block main_content %}
+    {% embed 'Embed/block_embed.html.twig' %}
+        {% import 'Import/app_import.html.twig' as appImport %}
+        {% block content %}
+            {{ appImport.heading({'level': 3, 'title': 'usage'|trans, 'badge': {'title': usage['rest_actions']|length}}) }}
+
+            {% embed 'Embed/table_embed.html.twig' %}
+                {% block thead %}
+                    <tr>
+                        <th>{{ 'action'|trans }}</th>
+                        <th>{{ 'total'|trans }}</th>
+                    </tr>
+                {% endblock %}
+
+                {% block tbody %}
+                    {% for key, value in usage['rest_actions'] %}
+                        <tr>
+                            <td>{{ key }}</td>
+                            <td>{{ value }}</td>
+                        </tr>
+                    {% endfor %}
+                {% endblock %}
+            {% endembed %}
+        {% endblock %}
+    {% endembed %}
+{% endblock %}

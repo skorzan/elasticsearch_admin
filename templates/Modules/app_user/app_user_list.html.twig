@@ -1,0 +1,67 @@
+{% embed 'Embed/table_embed.html.twig' %}
+    {% import 'Import/app_import.html.twig' as appImport %}
+
+    {% set columns = {'email': true, 'roles': true, 'created_at': true} %}
+
+    {% block thead %}
+        <tr>
+            {% for column, display in columns %}
+                {% if true == display %}
+                    {% if 'email' == column %}
+                        <th>
+                            {{ 'email'|trans }}{{ appImport.badge({'title': 'sort_asc'|trans, 'context': 'secondary'}) }}
+                        </th>
+                    {% endif %}
+
+                    {% if 'roles' == column %}
+                        <th>
+                            {{ 'app_roles'|trans }}
+                        </th>
+                    {% endif %}
+
+                    {% if 'created_at' == column %}
+                        <th>
+                            {{ 'created_at'|trans }}
+                        </th>
+                    {% endif %}
+                {% endif %}
+            {% endfor %}
+        </tr>
+    {% endblock %}
+
+    {% block tbody %}
+        {% for row in users.rows %}
+            <tr>
+                {% for column, display in columns %}
+                    {% if true == display %}
+                        {% if 'email' == column %}
+                            <td>
+                                <a class="text-primary-emphasis" href="{{ path('app_users_read', {'user': row.id}) }}">{{ row.email }}</a>
+                            </td>
+                        {% endif %}
+
+                        {% if 'roles' == column %}
+                            <td>
+                                {% if row.roles and 0 < row.roles|length %}
+                                    {% for record in row.roles %}
+                                        {% if record not in ['ROLE_ADMIN', 'ROLE_USER'] %}
+                                            <a class="text-secondary-emphasis" href="{{ path('app_roles_read', {'role': record}) }}">{{ record }}</a>{% if false == loop.last %}, {% endif %}
+                                        {% else %}
+                                            {{ record }}{% if false == loop.last %}, {% endif %}
+                                        {% endif %}
+                                    {% endfor %}
+                                {% endif %}
+                            </td>
+                        {% endif %}
+
+                        {% if 'created_at' == column %}
+                            <td>
+                                {{ row.createdAt|human_datetime }}
+                            </td>
+                        {% endif %}
+                    {% endif %}
+                {% endfor %}
+            </tr>
+        {% endfor %}
+    {% endblock %}
+{% endembed %}

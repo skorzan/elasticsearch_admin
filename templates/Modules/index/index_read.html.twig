@@ -1,0 +1,166 @@
+{% extends 'base.html.twig' %}
+{% import 'Import/app_import.html.twig' as appImport %}
+
+{% block head_title %}{{ 'indices'|trans }} - {{ index.name }}{% endblock %}
+
+{% block heading_1 %}
+    {{ appImport.heading({'level': 1, 'title': 'indices'|trans, 'link': {'url': path('indices')}}) }}
+{% endblock %}
+
+{% block heading_2 %}
+    {{ appImport.heading({'level': 2, 'title': index.name, 'badge': {'title': index.health|trans, 'context': index.health}}) }}
+{% endblock %}
+
+{% block tabs %}
+    {% include 'Modules/index/index_read_tabs.html.twig' with {'active': 'summary'} %}
+{% endblock %}
+
+{% block main_content %}
+    {% embed 'Embed/block_embed.html.twig' %}
+        {% import 'Import/app_import.html.twig' as appImport %}
+        {% block content %}
+            {{ appImport.heading({'level': 3, 'title': 'summary'|trans}) }}
+
+            {% embed 'Embed/buttons_embed.html.twig' %}
+                {% import 'Import/app_import.html.twig' as appImport %}
+                {% block content %}
+                    {% if is_granted('INDEX_DELETE', index) %}
+                        {{ appImport.buttonModal({
+                            'id': 'IndexDelete',
+                            'title': 'delete'|trans,
+                            'body': 'delete_index_note'|trans,
+                            'href': path('indices_delete', {'index': index.name}),
+                        }) }}
+                    {% endif %}
+
+                    {% if is_granted('INDEX_OPEN', index) %}
+                        {{ appImport.buttonModal({
+                            'id': 'IndexOpen',
+                            'title': 'open'|trans,
+                            'body': 'open_note'|trans,
+                            'href': path('indices_open', {'index': index.name}),
+                        }) }}
+                    {% endif %}
+
+                    {% if is_granted('INDEX_CLOSE', index) and cluster_settings['cluster.indices.close.enable'] is defined and 'true' == cluster_settings['cluster.indices.close.enable'] %}
+                        {{ appImport.buttonModal({
+                            'id': 'IndexClose',
+                            'title': 'close'|trans,
+                            'body': 'close_note'|trans,
+                            'href': path('indices_close', {'index': index.name}),
+                        }) }}
+                    {% endif %}
+
+                    {% if true == hasFeature('force_merge') %}
+                        {% if is_granted('INDEX_FORCE_MERGE', index) %}
+                            {{ appImport.buttonModal({
+                                'id': 'IndexForceMerge',
+                                'title': 'force_merge'|trans,
+                                'body': 'force_merge_note'|trans,
+                                'href': path('indices_force_merge', {'index': index.name}),
+                            }) }}
+                        {% endif %}
+                    {% endif %}
+
+                    {% if is_granted('INDEX_CACHE_CLEAR', index) %}
+                        {{ appImport.buttonModal({
+                            'id': 'IndexCacheClear',
+                            'title': 'cache_clear'|trans,
+                            'body': 'cache_clear_note'|trans,
+                            'href': path('indices_cache_clear', {'index': index.name}),
+                        }) }}
+                    {% endif %}
+
+                    {% if is_granted('INDEX_FLUSH', index) %}
+                        {{ appImport.buttonModal({
+                            'id': 'IndexFlush',
+                            'title': 'flush'|trans,
+                            'body': 'flush_note'|trans,
+                            'href': path('indices_flush', {'index': index.name}),
+                        }) }}
+                    {% endif %}
+
+                    {% if is_granted('INDEX_REFRESH', index) %}
+                        {{ appImport.buttonModal({
+                            'id': 'IndexRefresh',
+                            'title': 'refresh'|trans,
+                            'body': 'refresh_note'|trans,
+                            'href': path('indices_refresh', {'index': index.name}),
+                        }) }}
+                    {% endif %}
+
+                    {% if false == hasFeature('freezing_endpoint_removed') and true == hasFeature('freeze_unfreeze') %}
+                        {% if is_granted('INDEX_UNFREEZE', index) %}
+                            {{ appImport.buttonModal({
+                                'id': 'IndexUnfreeze',
+                                'title': 'unfreeze'|trans,
+                                'body': 'unfreeze_note'|trans,
+                                'href': path('indices_unfreeze', {'index': index.name}),
+                            }) }}
+                        {% endif %}
+
+                        {% if is_granted('INDEX_FREEZE', index) %}
+                            {{ appImport.buttonModal({
+                                'id': 'IndexFreeze',
+                                'title': 'freeze'|trans,
+                                'body': 'freeze_note'|trans,
+                                'href': path('indices_freeze', {'index': index.name}),
+                            }) }}
+                        {% endif %}
+                    {% endif %}
+
+                    {% if true == hasFeature('delete_by_query') %}
+                        {% if is_granted('INDEX_EMPTY', index) and 0 < index.documents %}
+                            {{ appImport.buttonModal({
+                                'id': 'IndexEmpty',
+                                'title': 'empty'|trans,
+                                'body': 'empty_note'|trans,
+                                'href': path('indices_empty', {'index': index.name}),
+                            }) }}
+                        {% endif %}
+                    {% endif %}
+                {% endblock %}
+            {% endembed %}
+
+            <hr>
+
+            <div class="row">
+                {{ appImport.dashboardKpi({'title': 'primary_shards'|trans, 'badge': {'title': index.primaryShards}}) }}
+
+                {{ appImport.dashboardKpi({'title': 'replicas'|trans, 'badge': {'title': index.replicas}}) }}
+
+                {{ appImport.dashboardKpi({'title': 'documents'|trans, 'badge': {'title': index.documents}}) }}
+
+                {{ appImport.dashboardKpi({'title': 'documents_deleted'|trans, 'badge': {'title': index.documentsDeleted}}) }}
+
+                {{ appImport.dashboardKpi({'title': 'primary_size'|trans, 'badge': {'title': index.primarySize|human_filesize}}) }}
+
+                {{ appImport.dashboardKpi({'title': 'total_size'|trans, 'badge': {'title': index.totalSize|human_filesize}}) }}
+
+                {{ appImport.dashboardKpi({'title': 'status'|trans, 'badge': {'title': index.status|trans, 'context': index.status}}) }}
+
+                {% if index.health %}
+                    {{ appImport.dashboardKpi({'title': 'health'|trans, 'badge': {'title': index.health|trans, 'context': index.health}}) }}
+                {% endif %}
+
+                {% if false == hasFeature('freezing_endpoint_removed') and true == hasFeature('freeze_unfreeze') %}
+                    {% if index.setting('index.frozen') and 'true' == index.setting('index.frozen') %}
+                        {{ appImport.dashboardKpi({'title': 'frozen'|trans, 'badge': {'title': 'boolean.true'|trans, 'context': 'true'}}) }}
+                    {% else %}
+                        {{ appImport.dashboardKpi({'title': 'frozen'|trans, 'badge': {'title': 'boolean.false'|trans, 'context': 'false'}}) }}
+                    {% endif %}
+                {% endif %}
+
+                {% if index.setting('index.version.created') %}
+                    {{ appImport.dashboardKpi({'title': 'version_created'|trans, 'badge': {'title': index.setting('index.version.created')|human_version}}) }}
+                {% endif %}
+
+                {% if index.setting('index.version.upgraded') %}
+                    {{ appImport.dashboardKpi({'title': 'version_upgraded'|trans, 'badge': {'title': index.setting('index.version.upgraded')|human_version}}) }}
+                {% endif %}
+
+                {{ appImport.dashboardKpi({'title': 'creation_date'|trans, 'badge': {'title': index.creationDate|human_datetime}}) }}
+            </div>
+        {% endblock %}
+    {% endembed %}
+{% endblock %}

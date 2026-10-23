@@ -1,0 +1,133 @@
+{% embed 'Embed/table_embed.html.twig' %}
+    {% import 'Import/app_import.html.twig' as appImport %}
+
+    {% set columns = {'name': true, 'full_name': true, 'email': true, 'roles': true, 'enabled': true, 'reserved': true, 'deprecated': true, 'deprecated_reason': true} %}
+
+    {% block thead %}
+        <tr>
+            {% for column, display in columns %}
+                {% if true == display %}
+                    {% if 'name' == column %}
+                        <th>
+                            {{ 'name'|trans }}{{ appImport.badge({'title': 'sort_asc'|trans, 'context': 'secondary'}) }}
+                        </th>
+                    {% endif %}
+
+                    {% if 'full_name' == column %}
+                        <th class="d-none d-xl-table-cell">
+                            {{ 'full_name'|trans }}
+                        </th>
+                    {% endif %}
+
+                    {% if 'email' == column %}
+                        <th class="d-none d-xl-table-cell">
+                            {{ 'email'|trans }}
+                        </th>
+                    {% endif %}
+
+                    {% if 'roles' == column %}
+                        <th>
+                            {{ 'elasticsearch_roles'|trans }}
+                        </th>
+                    {% endif %}
+
+                    {% if 'reserved' == column %}
+                        <th>
+                            {{ 'reserved'|trans }}
+                        </th>
+                    {% endif %}
+
+                    {% if 'deprecated' == column %}
+                        <th>
+                            {{ 'deprecated'|trans }}
+                        </th>
+                    {% endif %}
+
+                    {% if 'deprecated_reason' == column %}
+                        <th class="d-none d-xl-table-cell">
+                            {{ 'deprecated_reason'|trans }}
+                        </th>
+                    {% endif %}
+
+                    {% if 'enabled' == column %}
+                        <th>
+                            {{ 'enabled'|trans }}
+                        </th>
+                    {% endif %}
+                {% endif %}
+            {% endfor %}
+        </tr>
+    {% endblock %}
+
+    {% block tbody %}
+        {% for row in users.rows %}
+            <tr>
+                {% for column, display in columns %}
+                    {% if true == display %}
+                        {% if 'name' == column %}
+                            <td>
+                                <a class="text-primary-emphasis" href="{{ path('elasticsearch_users_read', {'user': row.name}) }}">{{ row.name }}</a>
+                            </td>
+                        {% endif %}
+
+                        {% if 'full_name' == column %}
+                            <td class="d-none d-xl-table-cell">
+                                {{ row.fullName }}
+                            </td>
+                        {% endif %}
+
+                        {% if 'email' == column %}
+                            <td class="d-none d-xl-table-cell">
+                                {{ row.email }}
+                            </td>
+                        {% endif %}
+
+                        {% if 'roles' == column %}
+                            <td>
+                                {% if row.roles and 0 < row.roles|length %}
+                                    {% for record in row.roles %}
+                                        <a class="text-secondary-emphasis" href="{{ path('elasticsearch_roles_read', {'role': record}) }}">{{ record }}</a>{% if false == loop.last %}, {% endif %}
+                                    {% endfor %}
+                                {% endif %}
+                            </td>
+                        {% endif %}
+
+                        {% if 'enabled' == column %}
+                            <td>
+                                {{ appImport.badge({'title': ('boolean.' ~ row.enabled)|trans, 'context': row.enabled}) }}
+                            </td>
+                        {% endif %}
+
+                        {% if 'reserved' == column %}
+                            <td>
+                                {% if row.isReserved %}
+                                    {{ appImport.badge({'title': 'boolean.true'|trans, 'context': 'true'}) }}
+                                {% else %}
+                                    {{ appImport.badge({'title': 'boolean.false'|trans, 'context': 'false'}) }}
+                                {% endif %}
+                            </td>
+                        {% endif %}
+
+                        {% if 'deprecated' == column %}
+                            <td>
+                                {% if row.isDeprecated %}
+                                    {{ appImport.badge({'title': 'boolean.true'|trans, 'context': 'true'}) }}
+                                {% else %}
+                                    {{ appImport.badge({'title': 'boolean.false'|trans, 'context': 'false'}) }}
+                                {% endif %}
+                            </td>
+                        {% endif %}
+
+                        {% if 'deprecated_reason' == column %}
+                            <td class="d-none d-xl-table-cell">
+                                {% if row.isDeprecated and row.deprecatedReason %}
+                                    {{ row.deprecatedReason }}
+                                {% endif %}
+                            </td>
+                        {% endif %}
+                    {% endif %}
+                {% endfor %}
+            </tr>
+        {% endfor %}
+    {% endblock %}
+{% endembed %}

@@ -1,0 +1,158 @@
+{% extends 'base.html.twig' %}
+{% import 'Import/app_import.html.twig' as appImport %}
+
+{% block head_title %}{{ 'sql'|trans }}{% endblock %}
+
+{% block heading_1 %}
+    {{ appImport.heading({'level': 1, 'title': 'sql'|trans}) }}
+{% endblock %}
+
+{% block main_content %}
+    {% embed 'Embed/block_embed.html.twig' %}
+        {% import 'Import/app_import.html.twig' as appImport %}
+        {% block content %}
+            {% embed 'Embed/buttons_embed.html.twig' %}
+                {% import 'Import/app_import.html.twig' as appImport %}
+                {% block content %}
+                    <a class="btn btn-secondary btn-sm" rel="noreferrer" target="_blank" href="https://www.elastic.co/guide/en/elasticsearch/reference/current/sql-spec.html">
+                        {{ 'help'|trans }}
+                    </a>
+                {% endblock %}
+            {% endembed %}
+
+            {{ appImport.form({'form': form}) }}
+        {% endblock %}
+    {% endembed %}
+
+    {% if query is defined or translation_to_dsl is defined %}
+        <ul class="nav nav-tabs mb-4">
+            {% if query is defined %}
+                <li class="nav-item">
+                    <a class="nav-link active text-light bg-dark" id="query-tab" data-bs-toggle="tab" href="#query" role="tab" aria-controls="query" aria-selected="true">{{ 'query'|trans }}</a>
+                </li>
+            {% endif %}
+
+            {% if translation_to_dsl is defined %}
+                <li class="nav-item">
+                    <a class="nav-link" id="translation_to_dsl-tab" data-bs-toggle="tab" href="#translation_to_dsl" role="tab" aria-controls="translation_to_dsl" aria-selected="true">{{ 'translation_to_dsl'|trans }}</a>
+                </li>
+            {% endif %}
+        </ul>
+    {% endif %}
+
+    <div class="tab-content" id="myTabContent">
+    {% if query is defined %}
+        <div class="tab-pane fade show active" id="query" role="tabpanel" aria-labelledby="query-tab">
+        {% embed 'Embed/block_embed.html.twig' %}
+            {% import 'Import/app_import.html.twig' as appImport %}
+            {% block content %}
+                {% if query is defined and 0 < query['rows']|length %}
+                    {{ appImport.heading({'level': 3, 'title': 'results'|trans, 'badge': {'title': query['rows']|length}}) }}
+
+                    {% embed 'Embed/table_embed.html.twig' %}
+                        {% block thead %}
+                            <tr>
+                                {% for column in query['columns'] %}
+                                    <th>
+                                        {{ column.name }}
+                                    </th>
+                                {% endfor %}
+                            </tr>
+                        {% endblock %}
+
+                        {% block tbody %}
+                            {% for row in query['rows'] %}
+                                <tr>
+                                    {% for column in row %}
+                                        <td>
+                                            {{ column }}
+                                        </td>
+                                    {% endfor %}
+                                </tr>
+                            {% endfor %}
+                        {% endblock %}
+                    {% endembed %}
+
+                    {% if query['cursor'] is defined %}
+                        <a id="cursor" class="btn btn-primary btn-sm" href="{{ query['cursor'] }}">
+                            {{ 'more'|trans }}
+                        </a>
+                    {% endif %}
+                {% endif %}
+            {% endblock %}
+        {% endembed %}
+        </div>
+    {% endif %}
+
+    {% if translation_to_dsl is defined %}
+        <div class="tab-pane fade" id="translation_to_dsl" role="tabpanel" aria-labelledby="translation_to_dsl-tab">
+        {% embed 'Embed/block_embed.html.twig' %}
+            {% import 'Import/app_import.html.twig' as appImport %}
+            {% block content %}
+                {{ appImport.heading({'level': 3, 'title': 'translation_to_dsl'|trans}) }}
+
+                <pre>{{ translation_to_dsl|json_encode(constant('JSON_PRETTY_PRINT')) }}</pre>
+            {% endblock %}
+        {% endembed %}
+        </div>
+    {% endif %}
+    </div>
+{% endblock %}
+
+{% block scripts %}
+    {{ parent() }}
+
+    {% if query is defined %}
+        <script type="text/javascript">
+            var nav = document.querySelector('nav');
+            var h3Badge = document.querySelector('h3 .badge');
+            var tbody = document.querySelector('tbody');
+            var cursor = document.getElementById('cursor');
+            var countResults = {{ query['rows']|length }};
+
+            cursor.addEventListener('click', function(event) {
+                event.preventDefault();
+                var body = {'cursor': cursor.getAttribute('href')};
+                var url = '{{ path('sql_cursor') }}';
+                fetch(url, {
+                    credentials: 'include',
+                    method: 'POST',
+                    body: JSON.stringify(body),
+                    mode: 'cors',
+                }).then(function(response) {
+                    return response.json();
+                }).then(function(json) {
+                    if (true == json.exception) {
+                        nav.insertAdjacentHTML('afterend', '<div class="alert alert-danger alert-dismissible fade show mt-3" role="alert">' + json.message + '<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="{{ 'close'|trans|escape('js')  }}"></button></div>');
+                        window.scrollTo(0, 0);
+
+                    } else {
+                        if (typeof json['content']['cursor'] != 'undefined') {
+                            cursor.setAttribute('href', json['content']['cursor']);
+                        } else {
+                            cursor.parentNode.removeChild(cursor);
+                        }
+
+                        for (var row in json['content']['rows']) {
+                            var tr = '<tr>';
+                            for (var column in json['content']['rows'][row]) {
+                                if (null != json['content']['rows'][row][column]) {
+                                    tr += '<td>' + json['content']['rows'][row][column] + '</td>';
+                                } else {
+                                    tr += '<td></td>';
+                                }
+                            }
+                            tr += '</tr>';
+                            tbody.insertAdjacentHTML('beforeend', tr);
+                            countResults++;
+                        }
+
+                        h3Badge.textContent = countResults;
+                    }
+                }).catch(function(error) {
+                    console.log(error);
+                });
+            });
+        </script>
+    {% endif %}
+{% endblock %}

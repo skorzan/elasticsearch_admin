@@ -1,0 +1,88 @@
+{% extends 'base.html.twig' %}
+{% import 'Import/app_import.html.twig' as appImport %}
+
+{% block head_title %}{{ 'app_roles'|trans }} - {{ role.name }} - {{ 'update'|trans }}{% endblock %}
+
+{% block heading_1 %}
+    {{ appImport.heading({'level': 1, 'title': 'app_roles'|trans, 'link': {'url': path('app_roles')}}) }}
+{% endblock %}
+
+{% block heading_2 %}
+    {{ appImport.heading({'level': 2, 'title': role.name}) }}
+{% endblock %}
+
+{% block tabs %}
+    {% include 'Modules/app_role/app_role_read_tabs.html.twig' with {'active': 'update'} %}
+{% endblock %}
+
+{% block main_content %}
+    {% embed 'Embed/block_embed.html.twig' %}
+        {% import 'Import/app_import.html.twig' as appImport %}
+        {% block content %}
+            {{ appImport.heading({'level': 3, 'title': 'update'|trans}) }}
+
+            {% embed 'Embed/table_embed.html.twig' %}
+                {% block thead %}
+                    <tr>
+                        <th colspan="3">{{ 'permissions'|trans }}</th>
+                    </tr>
+                {% endblock %}
+
+                {% block tbody %}
+                    {% for module, permissions in modules %}
+                        <tr>
+                            <th colspan="2">{{ module }}</th>
+                        </tr>
+
+                        {% for permission in permissions %}
+                            <tr>
+                                <td>{{ permission }}</td>
+                                <td>
+                                    <div class="form-check form-switch">
+                                        <input type="checkbox" role="switch" class="form-check-input custom-control-input-permission"
+                                        data-url="{{ path('app_roles_permission', {'role': role.name, 'module': module, 'permission': permission}) }}"
+                                        data-permission="{{ permission }}"
+                                        id="{{ module }}-{{ permission }}"{% if permissions_saved[module] is defined and permission in permissions_saved[module] %} checked="checked"{% endif %}>
+                                        <label class="form-check-label" for="{{ module }}-{{ permission }}"></label>
+                                    </div>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    {% endfor %}
+                {% endblock %}
+            {% endembed %}
+        {% endblock %}
+    {% endembed %}
+{% endblock %}
+
+{% block scripts %}
+    {{ parent() }}
+
+    <script type="text/javascript">
+        var checkboxes = [].slice.call(document.querySelectorAll('.custom-control-input-permission'));
+        checkboxes.map(function (checkbox) {
+            checkbox.addEventListener('change', function(event) {
+                var target = event.target;
+                var body = {'value': target.checked ? 'yes' : 'no'};
+                var url = target.dataset.url;
+                var permission = target.dataset.permission;
+
+                fetch(url, {
+                    credentials: 'include',
+                    method: 'POST',
+                    body: JSON.stringify(body),
+                    mode: 'cors',
+                })
+                .then(function(Response) {
+                    var message = target.checked ? '{{ 'added'|trans|escape('js') }}' : '{{ 'removed'|trans|escape('js') }}';
+                    message += ': ';
+                    message += permission;
+                    createToast(message);
+                })
+                .catch(function(error) {
+                    console.log(error);
+                });
+            });
+        });
+    </script>
+{% endblock %}

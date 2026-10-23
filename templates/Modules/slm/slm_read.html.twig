@@ -1,0 +1,114 @@
+{% extends 'base.html.twig' %}
+{% import 'Import/app_import.html.twig' as appImport %}
+
+{% block head_title %}{{ 'slm_short'|trans }} - {{ policy.name }}{% endblock %}
+
+{% block heading_1 %}
+    {{ appImport.heading({'level': 1, 'title': 'slm'|trans, 'link': {'url': path('slm')}}) }}
+{% endblock %}
+
+{% block heading_2 %}
+    {{ appImport.heading({'level': 2, 'title': policy.name}) }}
+{% endblock %}
+
+{% block tabs %}
+    {% include 'Modules/slm/slm_read_tabs.html.twig' with {'active': 'summary'} %}
+{% endblock %}
+
+{% block main_content %}
+    {% embed 'Embed/block_embed.html.twig' %}
+        {% import 'Import/app_import.html.twig' as appImport %}
+        {% block content %}
+            {{ appImport.heading({'level': 3, 'title': 'summary'|trans}) }}
+
+            {% embed 'Embed/buttons_embed.html.twig' %}
+                {% import 'Import/app_import.html.twig' as appImport %}
+                {% block content %}
+                    {% if is_granted('SLM_POLICY_DELETE', policy) %}
+                        {{ appImport.buttonModal({
+                            'id': 'PolicyDelete',
+                            'title': 'delete'|trans,
+                            'body': policy.name,
+                            'href': path('slm_delete', {'name': policy.name}),
+                        }) }}
+                    {% endif %}
+
+                    {% if is_granted('SLM_POLICY_EXECUTE', policy) %}
+                        {{ appImport.buttonModal({
+                            'id': 'PolicyExecute',
+                            'title': 'execute'|trans,
+                            'body': policy.name,
+                            'href': path('slm_execute', {'name': policy.name}),
+                        }) }}
+                    {% endif %}
+
+                    {% if is_granted('SLM_POLICY_COPY', policy) %}
+                        <a class="btn btn-primary btn-sm" href="{{ path('slm_create', {'policy': policy.name}) }}">{{ 'copy'|trans }}</a>
+                    {% endif %}
+                {% endblock %}
+            {% endembed %}
+
+            <hr>
+
+            <div class="row">
+                {{ appImport.dashboardKpi({'title': 'version'|trans, 'badge': {'title': policy.version}}) }}
+
+                {% if policy.modifiedDate %}
+                    {{ appImport.dashboardKpi({'title': 'modified_date'|trans, 'badge': {'title': policy.modifiedDate|human_datetime}}) }}
+                {% endif %}
+
+                {{ appImport.dashboardKpi({'title': 'snapshot_name'|trans, 'badge': {'title': policy.snapshotName}}) }}
+
+                {% if is_granted('REPOSITORIES_LIST', 'repository') %}
+                    {{ appImport.dashboardKpi({'title': 'repository'|trans, 'badge': {'title': policy.repository, 'link': path('repositories_read', {'repository': policy.repository})}}) }}
+                {% else %}
+                    {{ appImport.dashboardKpi({'title': 'repository'|trans, 'badge': {'title': policy.repository}}) }}
+                {% endif %}
+
+                {{ appImport.dashboardKpi({'title': 'schedule'|trans, 'badge': {'title': policy.schedule}}) }}
+
+                {{ appImport.dashboardKpi({'title': 'next_execution'|trans, 'badge': {'title': policy.nextExecution|human_datetime}}) }}
+
+                {% if policy.hasRetention %}
+                    {% if policy.expireAfter %}
+                        {{ appImport.dashboardKpi({'title': 'expire_after'|trans, 'badge': {'title': policy.expireAfter}}) }}
+                    {% endif %}
+
+                    {% if policy.minCount %}
+                        {{ appImport.dashboardKpi({'title': 'min_count'|trans, 'badge': {'title': policy.minCount}}) }}
+                    {% endif %}
+
+                    {% if policy.maxCount %}
+                        {{ appImport.dashboardKpi({'title': 'max_count'|trans, 'badge': {'title': policy.maxCount}}) }}
+                    {% endif %}
+                {% endif %}
+
+                {{ appImport.dashboardKpi({'title': 'ignore_unavailable'|trans, 'badge': {'title': ('boolean.' ~ policy.ignoreUnavailable)|trans, 'context': policy.ignoreUnavailable}}) }}
+
+                {{ appImport.dashboardKpi({'title': 'partial'|trans, 'badge': {'title': ('boolean.' ~ policy.partial)|trans, 'context': policy.partial}}) }}
+
+                {{ appImport.dashboardKpi({'title': 'include_global_state'|trans, 'badge': {'title': ('boolean.' ~ policy.includeGlobalState)|trans, 'context': policy.includeGlobalState}}) }}
+            </div>
+
+            {% if 0 < policy.indicesToArray|length %}
+                {% embed 'Embed/table_embed.html.twig' %}
+                    {% import 'Import/app_import.html.twig' as appImport %}
+
+                    {% block thead %}
+                        <tr>
+                            <th>{{ 'indices'|trans }}</th>
+                        </tr>
+                    {% endblock %}
+
+                    {% block tbody %}
+                        {% for index in policy.indicesToArray %}
+                            <tr>
+                                <td>{{ index }}</td>
+                            </tr>
+                        {% endfor %}
+                    {% endblock %}
+                {% endembed %}
+            {% endif %}
+        {% endblock %}
+    {% endembed %}
+{% endblock %}

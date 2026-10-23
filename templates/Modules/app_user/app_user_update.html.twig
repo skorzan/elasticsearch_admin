@@ -1,0 +1,77 @@
+{% extends 'base.html.twig' %}
+{% import 'Import/app_import.html.twig' as appImport %}
+
+{% block head_title %}{{ 'app_users'|trans }} - {{ user.email }} - {{ 'update'|trans }}{% endblock %}
+
+{% block heading_1 %}
+    {{ appImport.heading({'level': 1, 'title': 'app_users'|trans, 'link': {'url': path('app_users')}}) }}
+{% endblock %}
+
+{% block heading_2 %}
+    {{ appImport.heading({'level': 2, 'title': user.email}) }}
+{% endblock %}
+
+{% block tabs %}
+    {% include 'Modules/app_user/app_user_read_tabs.html.twig' with {'active': 'update'} %}
+{% endblock %}
+
+{% block main_content %}
+    {% embed 'Embed/block_embed.html.twig' %}
+        {% import 'Import/app_import.html.twig' as appImport %}
+        {% block content %}
+            {{ appImport.heading({'level': 3, 'title': 'update'|trans}) }}
+
+            {{ appImport.form({'form': form}) }}
+        {% endblock %}
+    {% endembed %}
+{% endblock %}
+
+{% block scripts %}
+    {{ parent() }}
+
+    <script type="text/javascript">
+        var dataChangePassword = document.getElementById('data_change_password');
+        var dataPasswordPlainFirst = document.getElementById('data_passwordPlain_first');
+        var dataPasswordPlainSecond = document.getElementById('data_passwordPlain_second');
+
+        function changePassword() {
+            if (true === dataChangePassword.checked) {
+                var badge = ' <small class="form-required badge bg-light text-dark ml-1">{{ 'required'|trans|escape('js') }}</small>';
+
+                dataPasswordPlainFirst.removeAttribute('disabled');
+                dataPasswordPlainFirst.setAttribute('required', 'required');
+
+                var dataPasswordPlainFirstLabel = document.querySelector('label[for="data_passwordPlain_first"]');
+                dataPasswordPlainFirstLabel.insertAdjacentHTML('beforeend', badge);
+
+                dataPasswordPlainSecond.removeAttribute('disabled');
+                dataPasswordPlainSecond.setAttribute('required', 'required');
+
+                var dataPasswordPlainSecondLabel = document.querySelector('label[for="data_passwordPlain_second"]');
+                dataPasswordPlainSecondLabel.insertAdjacentHTML('beforeend', badge);
+            } else {
+                dataPasswordPlainFirst.setAttribute('disabled', 'disabled');
+                dataPasswordPlainFirst.removeAttribute('required');
+
+                var dataPasswordPlainFirstLabelBadge = document.querySelector('label[for="data_passwordPlain_first"] .badge');
+                if (dataPasswordPlainFirstLabelBadge) {
+                    dataPasswordPlainFirstLabelBadge.parentNode.removeChild(dataPasswordPlainFirstLabelBadge);
+                }
+
+                dataPasswordPlainSecond.setAttribute('disabled', 'disabled');
+                dataPasswordPlainSecond.removeAttribute('required');
+
+                var dataPasswordPlainSecondLabelBadge = document.querySelector('label[for="data_passwordPlain_second"] .badge');
+                if (dataPasswordPlainSecondLabelBadge) {
+                    dataPasswordPlainSecondLabelBadge.parentNode.removeChild(dataPasswordPlainSecondLabelBadge);
+                }
+            }
+        }
+
+        changePassword();
+
+        dataChangePassword.addEventListener('click', function(event) {
+            changePassword();
+        });
+    </script>
+{% endblock %}

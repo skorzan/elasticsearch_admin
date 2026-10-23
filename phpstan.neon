@@ -1,0 +1,4 @@
+parameters:
+    checkGenericClassInNonGenericObjectType: false
+    bootstrapFiles:
+        - phpstan-constants.php

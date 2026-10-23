@@ -1,0 +1,187 @@
+{% extends 'base.html.twig' %}
+{% import 'Import/app_import.html.twig' as appImport %}
+
+{% block head_title %}{{ 'repositories'|trans }} - {{ repository.name }}{% endblock %}
+
+{% block heading_1 %}
+    {{ appImport.heading({'level': 1, 'title': 'repositories'|trans, 'link': {'url': path('repositories')}}) }}
+{% endblock %}
+
+{% block heading_2 %}
+    {{ appImport.heading({'level': 2, 'title': repository.name}) }}
+{% endblock %}
+
+{% block tabs %}
+    {% include 'Modules/repository/repository_read_tabs.html.twig' with {'active': 'summary'} %}
+{% endblock %}
+
+{% block main_content %}
+    {% embed 'Embed/block_embed.html.twig' %}
+        {% import 'Import/app_import.html.twig' as appImport %}
+        {% block content %}
+            {{ appImport.heading({'level': 3, 'title': 'summary'|trans}) }}
+
+            {% embed 'Embed/buttons_embed.html.twig' %}
+                {% import 'Import/app_import.html.twig' as appImport %}
+                {% block content %}
+                    {% if is_granted('REPOSITORY_DELETE', repository) %}
+                        {{ appImport.buttonModal({
+                            'id': 'RepositoryDelete',
+                            'title': 'delete'|trans,
+                            'body': repository.name,
+                            'href': path('repositories_delete', {'repository': repository.name}),
+                        }) }}
+                    {% endif %}
+
+                    {% if is_granted('REPOSITORY_CLEANUP', repository) %}
+                        {{ appImport.buttonModal({
+                            'id': 'RepositoryCleanup',
+                            'title': 'cleanup'|trans,
+                            'body': repository.name,
+                            'href': path('repositories_cleanup', {'repository': repository.name}),
+                        }) }}
+                    {% endif %}
+
+                    {% if is_granted('REPOSITORY_VERIFY', repository) %}
+                        {{ appImport.buttonModal({
+                            'id': 'RepositoryVerify',
+                            'title': 'verify'|trans,
+                            'body': repository.name,
+                            'href': path('repositories_verify', {'repository': repository.name}),
+                        }) }}
+                    {% endif %}
+                {% endblock %}
+            {% endembed %}
+
+            <div class="row">
+                <div class="col-12 col-md-5 col-lg-4">
+                    <p>
+                        <strong>{{ 'type'|trans }}</strong><br>
+                        {{ ('repository_' ~ repository.type)|trans }}
+                    </p>
+
+                    <p>
+                        <strong>{{ 'managed'|trans }}</strong><br>
+                        {% if cluster_settings['cluster.metadata.managed_repository'] is defined and cluster_settings['cluster.metadata.managed_repository'] == repository.name %}
+                            {{ appImport.badge({'title': 'boolean.true'|trans, 'context': 'true'}) }}
+                        {% else %}
+                            {{ appImport.badge({'title': 'boolean.false'|trans, 'context': 'false'}) }}
+                        {% endif %}
+                    </p>
+
+                    {% if repository.chunkSize %}
+                        <p>
+                            <strong>{{ 'chunk_size'|trans }}</strong><br>
+                            {{ repository.chunkSize }}
+                        </p>
+                    {% endif %}
+
+                    {% if repository.maxRestoreBytesPerSec %}
+                        <p>
+                            <strong>{{ 'max_restore_bytes_per_sec'|trans }}</strong><br>
+                            {{ repository.maxRestoreBytesPerSec }}
+                        </p>
+                    {% endif %}
+
+                    {% if repository.maxSnapshotBytesPerSec %}
+                        <p>
+                            <strong>{{ 'max_snapshot_bytes_per_sec'|trans }}</strong><br>
+                            {{ repository.maxSnapshotBytesPerSec }}
+                        </p>
+                    {% endif %}
+
+                    <p>
+                        <strong>{{ 'compress'|trans }}</strong><br>
+                        {{ ('boolean.' ~ repository.compress)|trans }}
+                    </p>
+
+                    <p>
+                        <strong>{{ 'readonly'|trans }}</strong><br>
+                        {{ ('boolean.' ~ repository.readonly)|trans }}
+                    </p>
+                </div>
+
+                <div class="col-12 col-md-5 col-lg-4">
+                    {% if 'fs' == repository.type %}
+                        <p>
+                            <strong>{{ 'location'|trans }}</strong><br>
+                            {{ repository.location }}
+                        </p>
+                    {% endif %}
+
+                    {% if 's3' == repository.type or 'gcs' == repository.type %}
+                        <p>
+                            <strong>{{ 'bucket'|trans }}</strong><br>
+                            {{ repository.bucket }}
+                        </p>
+                    {% endif %}
+
+                    {% if 'azure' == repository.type %}
+                        <p>
+                            <strong>{{ 'container'|trans }}</strong><br>
+                            {{ repository.container }}
+                        </p>
+                    {% endif %}
+
+                    {% if 's3' == repository.type or 'gcs' == repository.type or 'azure' == repository.type %}
+                        <p>
+                            <strong>{{ 'client'|trans }}</strong><br>
+                            {{ repository.client }}
+                        </p>
+
+                        {% if repository.basePath %}
+                            <p>
+                                <strong>{{ 'base_path'|trans }}</strong><br>
+                                {{ repository.basePath }}
+                            </p>
+                        {% endif %}
+                    {% endif %}
+
+                    {% if 's3' == repository.type %}
+                        <p>
+                            <strong>{{ 'server_side_encryption'|trans }}</strong><br>
+                            {{ ('boolean.' ~ repository.serverSideEncryption)|trans }}
+                        </p>
+
+                        {% if repository.bufferSize %}
+                            <p>
+                                <strong>{{ 'buffer_size'|trans }}</strong><br>
+                                {{ repository.bufferSize }}
+                            </p>
+                        {% endif %}
+
+                        {% if repository.cannedAcl %}
+                            <p>
+                                <strong>{{ 'canned_acl'|trans }}</strong><br>
+                                {{ repository.cannedAcl }}
+                            </p>
+                        {% endif %}
+
+                        {% if repository.storageClass %}
+                            <p>
+                                <strong>{{ 'storage_class'|trans }}</strong><br>
+                                {{ repository.storageClass }}
+                            </p>
+                        {% endif %}
+
+                        {% if repository.awsAccount %}
+                            <p>
+                                <strong>{{ 'aws_account'|trans }}</strong><br>
+                                {{ repository.awsAccount }}
+                            </p>
+                        {% endif %}
+                    {% endif %}
+
+                    {% if 'azure' == repository.type %}
+                        {% if repository.locationMode %}
+                            <p>
+                                <strong>{{ 'location_mode'|trans }}</strong><br>
+                                {{ repository.locationMode }}
+                            </p>
+                        {% endif %}
+                    {% endif %}
+                </div>
+            </div>
+        {% endblock %}
+    {% endembed %}
+{% endblock %}

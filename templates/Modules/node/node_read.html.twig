@@ -1,0 +1,71 @@
+{% extends 'base.html.twig' %}
+{% import 'Import/app_import.html.twig' as appImport %}
+
+{% block head_title %}{{ 'nodes'|trans }} - {{ node.name }}{% endblock %}
+
+{% block heading_1 %}
+    {{ appImport.heading({'level': 1, 'title': 'nodes'|trans, 'link': {'url': path('nodes')}}) }}
+{% endblock %}
+
+{% block heading_2 %}
+    {% if master_node == node.name %}
+        {{ appImport.heading({'level': 2, 'title': node.name, 'badge': {'title': 'master'|trans, 'context': 'master_node'}}) }}
+    {% else %}
+        {{ appImport.heading({'level': 2, 'title': node.name}) }}
+    {% endif %}
+{% endblock %}
+
+{% block tabs %}
+    {% include 'Modules/node/node_read_tabs.html.twig' with {'active': 'summary'} %}
+{% endblock %}
+
+{% block main_content %}
+    {% embed 'Embed/block_embed.html.twig' %}
+        {% import 'Import/app_import.html.twig' as appImport %}
+        {% block content %}
+            {{ appImport.heading({'level': 3, 'title': 'summary'|trans}) }}
+
+            <hr>
+
+            <div class="row">
+                {{ appImport.dashboardKpi({'title': 'ip'|trans, 'badge': {'title': node.ip}}) }}
+
+                {{ appImport.dashboardKpi({'title': 'version_es'|trans, 'badge': {'title': node.version}}) }}
+
+                {% if node.os['pretty_name'] is defined %}
+                    {{ appImport.dashboardKpi({'title': 'os'|trans, 'badge': {'title': node.os['pretty_name']}}) }}
+                {% endif %}
+
+                {% if node.os['version'] is defined %}
+                    {{ appImport.dashboardKpi({'title': 'os_version'|trans, 'badge': {'title': node.os['version']}}) }}
+                {% endif %}
+
+                {% if node.os['arch'] is defined %}
+                    {{ appImport.dashboardKpi({'title': 'os_arch'|trans, 'badge': {'title': node.os['arch']}}) }}
+                {% endif %}
+            </div>
+
+            {% if node.roles %}
+                {% embed 'Embed/table_embed.html.twig' %}
+                    {% import 'Import/app_import.html.twig' as appImport %}
+
+                    {% block thead %}
+                        <tr>
+                            <th>{{ 'roles'|trans }}</th>
+                        </tr>
+                    {% endblock %}
+
+                    {% block tbody %}
+                        {% for role in node.roles %}
+                            <tr>
+                                <td>
+                                    {{ ('node_roles.' ~ role)|trans }}
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    {% endblock %}
+                {% endembed %}
+            {% endif %}
+        {% endblock %}
+    {% endembed %}
+{% endblock %}

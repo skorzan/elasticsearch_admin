@@ -1,0 +1,63 @@
+{% extends 'base.html.twig' %}
+{% import 'Import/app_import.html.twig' as appImport %}
+
+{% block head_title %}{{ 'cluster'|trans }} - {{ cluster_health['cluster_name'] }}{% endblock %}
+
+{% block heading_1 %}
+    {{ appImport.heading({'level': 1, 'title': 'cluster'|trans}) }}
+{% endblock %}
+
+{% block heading_2 %}
+    {{ appImport.heading({'level': 2, 'title': cluster_health['cluster_name'], 'badge': {'title': cluster_health['status']|trans, 'context': cluster_health['status']}}) }}
+{% endblock %}
+
+{% block tabs %}
+    {% include 'Modules/cluster/cluster_read_tabs.html.twig' with {'active': 'summary'} %}
+{% endblock %}
+
+{% block main_content %}
+    {% embed 'Embed/block_embed.html.twig' %}
+        {% import 'Import/app_import.html.twig' as appImport %}
+        {% block content %}
+            {{ appImport.heading({'level': 3, 'title': 'summary'|trans}) }}
+
+            <hr>
+
+            <div class="row">
+                {{ appImport.dashboardKpi({'title': 'status'|trans, 'badge': {'title': cluster_health['status']|trans, 'context': cluster_health['status']}}) }}
+
+                {{ appImport.dashboardKpi({'title': 'nodes'|trans, 'badge': {'title': cluster_health['number_of_nodes']}}) }}
+
+                {% if master_node %}
+                    {% if is_granted('NODES_LIST', 'node') %}
+                        {{ appImport.dashboardKpi({'title': 'master_node'|trans, 'badge': {'title': master_node, 'context': 'master_node', 'link': path('nodes_read', {'node': master_node})}}) }}
+                    {% else %}
+                        {{ appImport.dashboardKpi({'title': 'master_node'|trans, 'badge': {'title': master_node, 'context': 'master_node'}}) }}
+                    {% endif %}
+                {% endif %}
+
+                {% if indices %}
+                    {{ appImport.dashboardKpi({'title': 'indices'|trans, 'badge': {'title': indices}}) }}
+                {% endif %}
+
+                {% if cluster_health['active_shards'] is defined %}
+                    {{ appImport.dashboardKpi({'title': 'active_shards'|trans, 'badge': {'title': cluster_health['active_shards']}}) }}
+                {% endif %}
+
+                {% if is_granted('SHARDS', 'global') and 0 < cluster_health['unassigned_shards'] %}
+                    {{ appImport.dashboardKpi({'title': 'unassigned_shards'|trans, 'badge': {'title': cluster_health['unassigned_shards'], 'context': 'danger', 'link': path('shards', {'state[]': 'unassigned'})}}) }}
+                {% else %}
+                    {{ appImport.dashboardKpi({'title': 'unassigned_shards'|trans, 'badge': {'title': cluster_health['unassigned_shards'], 'context': 'danger'}}) }}
+                {% endif %}
+
+                {% if documents %}
+                    {{ appImport.dashboardKpi({'title': 'total_primary_documents'|trans, 'badge': {'title': documents}}) }}
+                {% endif %}
+
+                {% if total_size %}
+                    {{ appImport.dashboardKpi({'title': 'total_size'|trans, 'badge': {'title': total_size|human_filesize}}) }}
+                {% endif %}
+            </div>
+        {% endblock %}
+    {% endembed %}
+{% endblock %}

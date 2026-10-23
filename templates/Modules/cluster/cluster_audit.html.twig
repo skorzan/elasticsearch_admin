@@ -1,0 +1,504 @@
+{% extends 'base.html.twig' %}
+{% import 'Import/app_import.html.twig' as appImport %}
+
+{% block head_title %}{{ 'cluster'|trans }} - {{ cluster_health['cluster_name'] }} - {{ 'audit'|trans }}{% endblock %}
+
+{% block heading_1 %}
+    {{ appImport.heading({'level': 1, 'title': 'cluster'|trans}) }}
+{% endblock %}
+
+{% block heading_2 %}
+    {{ appImport.heading({'level': 2, 'title': cluster_health['cluster_name'], 'badge': {'title': cluster_health['status']|trans, 'context': cluster_health['status']}}) }}
+{% endblock %}
+
+{% block tabs %}
+    {% include 'Modules/cluster/cluster_read_tabs.html.twig' with {'active': 'audit'} %}
+{% endblock %}
+
+{% block main_content %}
+    {% embed 'Embed/block_embed.html.twig' %}
+        {% import 'Import/app_import.html.twig' as appImport %}
+        {% block content %}
+            {{ appImport.heading({'level': 3, 'title': 'audit'|trans}) }}
+
+            <hr>
+
+            <div class="row">
+                {% for result, checkpoints in results %}
+                    {{ appImport.dashboardKpi({'title': result|trans, 'badge': {'title': checkpoints|length, 'context': result}}) }}
+                {% endfor %}
+            </div>
+
+            {% embed 'Embed/table_embed.html.twig' %}
+                {% import 'Import/app_import.html.twig' as appImport %}
+
+                {% block thead %}
+                    <tr>
+                        <th>{{ 'audit_checkpoint'|trans }}</th>
+                        <th>{{ 'audit_result'|trans }}</th>
+                        <th>{{ 'audit_comment'|trans }}</th>
+                        <th class="d-none d-xl-table-cell">{{ 'internal_link'|trans }}</th>
+                        <th class="d-none d-xl-table-cell">{{ 'external_link'|trans }}</th>
+                    </tr>
+                {% endblock %}
+
+                {% block tbody %}
+                    {% for result, checkpoints in results %}
+                        {% for checkpoint, parameters in checkpoints %}
+                            <tr>
+                                <td>{{ ('audit_checkpoints.' ~ checkpoint)|trans }}</td>
+                                <td>
+                                    {{ appImport.badge({'title': result|trans, 'context': result}) }}
+                                </td>
+
+                                {% if 'security_features' == checkpoint %}
+                                    {% embed 'Embed/audit_checkpoint_embed.html.twig' %}
+                                        {% block external_link %}
+                                            <a class="btn btn-secondary btn-sm" rel="noreferrer" target="_blank" href="https://www.elastic.co/guide/en/elasticsearch/reference/current/configuring-security.html">{{ 'help'|trans }}</a>
+                                        {% endblock %}
+                                    {% endembed %}
+                                {% endif %}
+
+                                {% if 'cluster_name' == checkpoint %}
+                                    {% embed 'Embed/audit_checkpoint_embed.html.twig' %}
+                                        {% block comment %}
+                                            {% if 'audit_pass' == result %}
+                                                {{ ('audit_comments.' ~ checkpoint ~ '.pass')|trans({'{name}': cluster_health['cluster_name']})|raw }}
+                                            {% endif %}
+                                            {% if 'audit_notice' == result %}
+                                                {{ ('audit_comments.' ~ checkpoint ~ '.notice')|trans|raw }}
+                                            {% endif %}
+                                        {% endblock %}
+
+                                        {% block external_link %}
+                                            <a class="btn btn-secondary btn-sm" rel="noreferrer" target="_blank" href="https://www.elastic.co/guide/en/elasticsearch/reference/current/cluster.name.html">{{ 'help'|trans }}</a>
+                                        {% endblock %}
+                                    {% endembed %}
+                                {% endif %}
+
+                                {% if 'same_es_version' == checkpoint %}
+                                    {% embed 'Embed/audit_checkpoint_embed.html.twig' %}
+                                        {% block comment %}
+                                            {% if 1 == parameters|length %}
+                                                {{ ('audit_comments.' ~ checkpoint ~ '.singular')|trans|raw }} {{ parameters|join(', ') }}
+                                            {% else %}
+                                                {{ ('audit_comments.' ~ checkpoint ~ '.plural')|trans|raw }}
+                                                {% for version in parameters %}
+                                                    {% if is_granted('NODES_LIST', 'node') %}
+                                                        <a class="text-secondary-emphasis" href="{{ path('nodes', {'version': version}) }}">{{ version }}</a>{% if false == loop.last %},{% endif %}
+                                                    {% else %}
+                                                        {{ version }}{% if false == loop.last %},{% endif %}
+                                                    {% endif %}
+                                                {% endfor %}
+                                            {% endif %}
+                                        {% endblock %}
+                                    {% endembed %}
+                                {% endif %}
+
+                                {% if 'same_plugins' == checkpoint %}
+                                    {% embed 'Embed/audit_checkpoint_embed.html.twig' %}
+                                        {% block comment %}
+                                            {% if 'audit_fail' == result %}
+                                                {{ ('audit_comments.' ~ checkpoint ~ '.fail')|trans|raw }}
+                                                {% for node, plugins in parameters %}
+                                                    {{ node }} ({{ plugins|join(', ') }}){% if false == loop.last %},{% endif %}
+                                                {% endfor %}
+                                            {% endif %}
+
+                                            {% if 'audit_pass' == result %}
+                                                {% if 0 < parameters|length %}
+                                                    {{ ('audit_comments.' ~ checkpoint ~ '.pass_plural')|trans({'{plugins}': parameters|join(', ')})|raw }}
+                                                {% else %}
+                                                    {{ ('audit_comments.' ~ checkpoint ~ '.pass_no_plugins')|trans|raw }}
+                                                {% endif %}
+                                            {% endif %}
+                                        {% endblock %}
+                                    {% endembed %}
+                                {% endif %}
+
+                                {% if 'unassigned_shards' == checkpoint %}
+                                    {% embed 'Embed/audit_checkpoint_embed.html.twig' %}
+                                        {% block comment %}
+                                            {% if 'audit_fail' == result %}
+                                                {{ ('audit_comments.' ~ checkpoint ~ '.fail')|trans({'{number}': parameters})|raw }}
+                                            {% endif %}
+                                        {% endblock %}
+
+                                        {% block internal_link %}
+                                            {% if 'audit_fail' == result and is_granted('SHARDS', 'global') %}
+                                                <a class="text-secondary-emphasis" href="{{ path('shards', {'state[]': 'unassigned'}) }}">{{ 'shards'|trans }}</a>
+                                            {% endif %}
+                                        {% endblock %}
+                                    {% endembed %}
+                                {% endif %}
+
+                                {% if 'indices_with_replica' == checkpoint %}
+                                    {% embed 'Embed/audit_checkpoint_embed.html.twig' %}
+                                        {% block comment %}
+                                            {% if 'audit_notice' == result %}
+                                                {{ ('audit_comments.' ~ checkpoint ~ '.notice')|trans|raw }}
+                                            {% endif %}
+                                        {% endblock %}
+
+                                        {% block internal_link %}
+                                            {% if 'audit_fail' == result and is_granted('INDICES_LIST', 'index') %}
+                                                <a class="text-secondary-emphasis" href="{{ path('indices', {'sort': 'rep:asc'}) }}">{{ 'indices'|trans }}</a>
+                                            {% endif %}
+                                        {% endblock %}
+                                    {% endembed %}
+                                {% endif %}
+
+                                {% if 'replication_100_percent' == checkpoint %}
+                                    {% embed 'Embed/audit_checkpoint_embed.html.twig' %}
+                                        {% block comment %}
+                                            {% if 'audit_notice' == result %}
+                                                {{ ('audit_comments.' ~ checkpoint ~ '.notice')|trans|raw }}
+                                            {% else %}
+                                                {{ ('audit_comments.' ~ checkpoint ~ '.note')|trans({'{replication}': parameters})|raw }}
+                                            {% endif %}
+                                        {% endblock %}
+                                    {% endembed %}
+                                {% endif %}
+
+                                {% if 'indices_replicas_data_nodes' == checkpoint %}
+                                    {% embed 'Embed/audit_checkpoint_embed.html.twig' %}
+                                        {% block comment %}
+                                            {{ ('audit_comments.' ~ checkpoint ~ '.note')|trans({'{data_nodes}': parameters})|raw }}
+                                        {% endblock %}
+
+                                        {% block internal_link %}
+                                            {% if 'audit_fail' == result and is_granted('INDICES_LIST', 'index') %}
+                                                <a class="text-secondary-emphasis" href="{{ path('indices', {'sort': 'rep:desc'}) }}">{{ 'indices'|trans }}</a>
+                                            {% endif %}
+                                        {% endblock %}
+                                    {% endembed %}
+                                {% endif %}
+
+                                {% if 'indices_opened' == checkpoint %}
+                                    {% embed 'Embed/audit_checkpoint_embed.html.twig' %}
+                                        {% block internal_link %}
+                                            {% if 'audit_fail' == result and is_granted('INDICES_LIST', 'index') %}
+                                                <a class="text-secondary-emphasis" href="{{ path('indices', {'sort': 'status:asc'}) }}">{{ 'indices'|trans }}</a>
+                                            {% endif %}
+                                        {% endblock %}
+
+                                        {% block external_link %}
+                                            <a class="btn btn-secondary btn-sm" rel="noreferrer" target="_blank" href="https://www.elastic.co/guide/en/elasticsearch/reference/current/index-management-settings.html">{{ 'help'|trans }}</a>
+                                        {% endblock %}
+                                    {% endembed %}
+                                {% endif %}
+
+                                {% if 'adaptive_replica_selection' == checkpoint %}
+                                    {% embed 'Embed/audit_checkpoint_embed.html.twig' %}
+                                        {% block comment %}
+                                            {% if 'audit_fail' == result %}
+                                                {{ ('audit_comments.' ~ checkpoint ~ '.fail')|trans({'{setting}': 'cluster.routing.use_adaptive_replica_selection', '{value}': 'true'})|raw }}
+                                            {% endif %}
+                                        {% endblock %}
+
+                                        {% block internal_link %}
+                                            {% if 'audit_fail' == result %}
+                                                {% if true == hasFeature('cluster_settings') and is_granted('CLUSTER_SETTINGS', 'global') and is_granted('CLUSTER_SETTING_EDIT', 'global') %}
+                                                    <a class="text-secondary-emphasis" href="{{ path('cluster_settings') }}">{{ 'cluster_settings'|trans }}</a>
+                                                {% endif %}
+                                            {% endif %}
+                                        {% endblock %}
+
+                                        {% block external_link %}
+                                            <a class="btn btn-secondary btn-sm" rel="noreferrer" target="_blank" href="https://www.elastic.co/guide/en/elasticsearch/reference/current/search.html#search-adaptive-replica">{{ 'help'|trans }}</a>
+                                        {% endblock %}
+                                    {% endembed %}
+                                {% endif %}
+
+                                {% if 'cluster_not_readonly' == checkpoint %}
+                                    {% embed 'Embed/audit_checkpoint_embed.html.twig' %}
+                                        {% block internal_link %}
+                                            {% if 'audit_fail' == result %}
+                                                {% if true == hasFeature('cluster_settings') and is_granted('CLUSTER_SETTINGS', 'global') and is_granted('CLUSTER_SETTING_EDIT', 'global') %}
+                                                    <a class="text-secondary-emphasis" href="{{ path('cluster_settings') }}">{{ 'cluster_settings'|trans }}</a>
+                                                {% endif %}
+                                            {% endif %}
+                                        {% endblock %}
+
+                                        {% block external_link %}
+                                            <a class="btn btn-secondary btn-sm" rel="noreferrer" target="_blank" href="https://www.elastic.co/guide/en/elasticsearch/reference/current/modules-cluster.html#cluster-read-only">{{ 'help'|trans }}</a>
+                                        {% endblock %}
+                                    {% endembed %}
+                                {% endif %}
+
+                                {% if 'allocation_disk_threshold' == checkpoint %}
+                                    {% embed 'Embed/audit_checkpoint_embed.html.twig' %}
+                                        {% block comment %}
+                                            {% if 'audit_fail' == result %}
+                                                {{ ('audit_comments.' ~ checkpoint ~ '.fail')|trans({'{setting}': 'cluster.routing.allocation.disk.threshold_enabled', '{value}': 'true'})|raw }}
+                                            {% endif %}
+                                        {% endblock %}
+
+                                        {% block internal_link %}
+                                            {% if true == hasFeature('cluster_settings') and is_granted('CLUSTER_DISK_THRESHOLDS', 'global') %}
+                                                <a class="text-secondary-emphasis" href="{{ path('cluster_disk_thresholds') }}">{{ 'disk_thresholds'|trans }}</a>
+                                            {% endif %}
+                                        {% endblock %}
+
+                                        {% block external_link %}
+                                            <a class="btn btn-secondary btn-sm" rel="noreferrer" target="_blank" href="https://www.elastic.co/guide/en/elasticsearch/reference/current/modules-cluster.html#disk-based-shard-allocation">{{ 'help'|trans }}</a>
+                                        {% endblock %}
+                                    {% endembed %}
+                                {% endif %}
+
+                                {% if 'below_disk_thresholds' == checkpoint %}
+                                    {% embed 'Embed/audit_checkpoint_embed.html.twig' %}
+                                        {% block comment %}
+                                            {% if 'audit_fail' == result %}
+                                                {{ 'audit_comments.fail_for_nodes'|trans|raw }}
+                                                {% for node, value in parameters %}
+                                                    {{ node }} ({{ value|trans }}){% if false == loop.last %},{% endif %}
+                                                {% endfor %}
+                                            {% endif %}
+                                        {% endblock %}
+
+                                        {% block internal_link %}
+                                            {% if is_granted('NODES_LIST', 'node') %}
+                                                <a class="text-secondary-emphasis" href="{{ path('nodes') }}">{{ 'nodes'|trans }}</a>
+                                            {% endif %}
+                                        {% endblock %}
+                                    {% endembed %}
+                                {% endif %}
+
+                                {% if 'heap_size_below_50' == checkpoint %}
+                                    {% embed 'Embed/audit_checkpoint_embed.html.twig' %}
+                                        {% block comment %}
+                                            {% if 'audit_fail' == result %}
+                                                {{ 'audit_comments.fail_for_nodes'|trans|raw }}
+                                                {% for node, value in parameters %}
+                                                    {{ node }} ({{ value|round(2) }}%){% if false == loop.last %},{% endif %}
+                                                {% endfor %}
+                                            {% endif %}
+                                        {% endblock %}
+
+                                        {% block internal_link %}
+                                            {% if is_granted('NODES_LIST', 'node') %}
+                                                <a class="text-secondary-emphasis" href="{{ path('nodes') }}">{{ 'nodes'|trans }}</a>
+                                            {% endif %}
+                                        {% endblock %}
+
+                                        {% block external_link %}
+                                            <a class="btn btn-secondary btn-sm" rel="noreferrer" target="_blank" href="https://www.elastic.co/guide/en/elasticsearch/reference/current/heap-size.html">{{ 'help'|trans }}</a>
+                                        {% endblock %}
+                                    {% endembed %}
+                                {% endif %}
+
+                                {% if 'heap_size_init_equal_max' == checkpoint %}
+                                    {% embed 'Embed/audit_checkpoint_embed.html.twig' %}
+                                        {% block comment %}
+                                            {% if 'audit_fail' == result %}
+                                                {{ 'audit_comments.fail_for_nodes'|trans|raw }}
+                                                {% for node, value in parameters %}
+                                                    {{ node }} ({{ value.init|human_filesize }} / {{ value.max|human_filesize }}){% if false == loop.last %},{% endif %}
+                                                {% endfor %}
+                                            {% endif %}
+                                        {% endblock %}
+
+                                        {% block internal_link %}
+                                            {% if is_granted('NODES_LIST', 'node') %}
+                                                <a class="text-secondary-emphasis" href="{{ path('nodes') }}">{{ 'nodes'|trans }}</a>
+                                            {% endif %}
+                                        {% endblock %}
+
+                                        {% block external_link %}
+                                            <a class="btn btn-secondary btn-sm" rel="noreferrer" target="_blank" href="https://www.elastic.co/guide/en/elasticsearch/reference/current/_heap_size_check.html">{{ 'help'|trans }}</a>
+                                        {% endblock %}
+                                    {% endembed %}
+                                {% endif %}
+
+                                {% if 'anonymous_access_disabled' == checkpoint %}
+                                    {% embed 'Embed/audit_checkpoint_embed.html.twig' %}
+                                        {% block external_link %}
+                                            <a class="btn btn-secondary btn-sm" rel="noreferrer" target="_blank" href="https://www.elastic.co/guide/en/elasticsearch/reference/current/anonymous-access.html">{{ 'help'|trans }}</a>
+                                        {% endblock %}
+                                    {% endembed %}
+                                {% endif %}
+
+                                {% if 'license_not_expired' == checkpoint %}
+                                    {% embed 'Embed/audit_checkpoint_embed.html.twig' %}
+                                        {% block comment %}
+                                            {% if 'basic' != parameters['type'] and parameters['expiry_date_in_millis'] is defined %}
+                                                {{ ('audit_comments.' ~ checkpoint ~ '.expiration')|trans({'{type}': parameters['type'], '{date}': parameters['expiry_date_in_millis']|human_datetime})|raw }}
+                                            {% else %}
+                                                {% if 'audit_notice' == result %}
+                                                    {{ ('audit_comments.' ~ checkpoint ~ '.no_expiration')|trans|raw }}
+                                                {% endif %}
+                                            {% endif %}
+                                        {% endblock %}
+
+                                        {% block internal_link %}
+                                            {% if true == hasFeature('license') and is_granted('LICENSE', 'global') %}
+                                                <a class="text-secondary-emphasis" href="{{ path('license') }}">{{ 'license'|trans }}</a>
+                                            {% endif %}
+                                        {% endblock %}
+                                    {% endembed %}
+                                {% endif %}
+
+                                {% if 'file_descriptors' == checkpoint %}
+                                    {% embed 'Embed/audit_checkpoint_embed.html.twig' %}
+                                        {% block comment %}
+                                            {% if 'audit_fail' == result %}
+                                                {{ 'audit_comments.fail_for_nodes'|trans|raw }}
+                                                {% for node, value in parameters %}
+                                                    {{ node }} ({{ value }}){% if false == loop.last %},{% endif %}
+                                                {% endfor %}
+                                            {% endif %}
+                                        {% endblock %}
+
+                                        {% block external_link %}
+                                            <a class="btn btn-secondary btn-sm" rel="noreferrer" target="_blank" href="https://www.elastic.co/guide/en/elasticsearch/reference/current/file-descriptors.html">{{ 'help'|trans }}</a>
+                                        {% endblock %}
+                                    {% endembed %}
+                                {% endif %}
+
+                                {% if 'password_not_changeme' == checkpoint %}
+                                    {% embed 'Embed/audit_checkpoint_embed.html.twig' %}
+                                        {% block comment %}
+                                            {% if 'audit_fail' == result %}
+                                                {{ ('audit_comments.' ~ checkpoint ~ '.fail')|trans|raw }}
+                                            {% endif %}
+                                        {% endblock %}
+
+                                        {% block external_link %}
+                                            <a class="btn btn-secondary btn-sm" rel="noreferrer" target="_blank" href="https://www.elastic.co/guide/en/elasticsearch/reference/current/setup-passwords.html">{{ 'help'|trans }}</a>
+                                        {% endblock %}
+                                    {% endembed %}
+                                {% endif %}
+
+                                {% if 'slm_policies_schedule_unique' == checkpoint %}
+                                    {% embed 'Embed/audit_checkpoint_embed.html.twig' %}
+                                        {% block comment %}
+                                            {% if 'audit_fail' == result %}
+                                                {{ ('audit_comments.' ~ checkpoint ~ '.fail')|trans|raw }}
+                                            {% endif %}
+                                        {% endblock %}
+
+                                        {% block internal_link %}
+                                            {% if is_granted('SLM_POLICIES_LIST', 'slm_policy') %}
+                                                <a class="text-secondary-emphasis" href="{{ path('slm') }}">{{ 'slm'|trans }}</a>
+                                            {% endif %}
+                                        {% endblock %}
+                                    {% endembed %}
+                                {% endif %}
+
+                                {% if 'repositories_connected' == checkpoint %}
+                                    {% embed 'Embed/audit_checkpoint_embed.html.twig' %}
+                                        {% block comment %}
+                                            {% if 'audit_fail' == result %}
+                                                {{ ('audit_comments.fail_for_repositories')|trans|raw }}
+                                                {% for repository in parameters %}
+                                                    {% if is_granted('REPOSITORIES_LIST', 'repository') %}
+                                                        <a class="text-secondary-emphasis" href="{{ path('repositories_read', {'repository': repository}) }}">{{ repository }}</a>{% if false == loop.last %},{% endif %}
+                                                    {% else %}
+                                                        {{ repository }}{% if false == loop.last %},{% endif %}
+                                                    {% endif %}
+                                                {% endfor %}
+                                            {% endif %}
+                                            {% if 'audit_notice' == result %}
+                                                {{ ('audit_comments.' ~ checkpoint ~ '.notice')|trans|raw }}
+                                            {% endif %}
+                                        {% endblock %}
+                                    {% endembed %}
+                                {% endif %}
+
+                                {% if 'shard_allocation_enabled' == checkpoint %}
+                                    {% embed 'Embed/audit_checkpoint_embed.html.twig' %}
+                                        {% block comment %}
+                                            {{ ('audit_comments.' ~ checkpoint ~ '.note')|trans({'{setting}': 'cluster.routing.allocation.enable', '{value}': parameters})|raw }}
+                                        {% endblock %}
+
+                                        {% block internal_link %}
+                                            {% if true == hasFeature('cluster_settings') and is_granted('CLUSTER_SETTINGS', 'global') and is_granted('CLUSTER_SETTING_EDIT', 'global') %}
+                                                <a class="text-secondary-emphasis" href="{{ path('cluster_settings') }}">{{ 'cluster_settings'|trans }}</a>
+                                            {% endif %}
+                                        {% endblock %}
+
+                                        {% block external_link %}
+                                            <a class="btn btn-secondary btn-sm" rel="noreferrer" target="_blank" href="https://www.elastic.co/guide/en/elasticsearch/reference/current/modules-cluster.html#cluster-shard-allocation-settings">{{ 'help'|trans }}</a>
+                                        {% endblock %}
+                                    {% endembed %}
+                                {% endif %}
+
+                                {% if 'max_shards_per_node' == checkpoint %}
+                                    {% embed 'Embed/audit_checkpoint_embed.html.twig' %}
+                                        {% block comment %}
+                                            {{ ('audit_comments.' ~ checkpoint ~ '.note')|trans({'{setting}': 'cluster.max_shards_per_node', '{value}': parameters})|raw }}
+                                        {% endblock %}
+
+                                        {% block internal_link %}
+                                            {% if true == hasFeature('cluster_settings') and is_granted('CLUSTER_SETTINGS', 'global') and is_granted('CLUSTER_SETTING_EDIT', 'global') %}
+                                                <a class="text-secondary-emphasis" href="{{ path('cluster_settings') }}">{{ 'cluster_settings'|trans }}</a>
+                                            {% endif %}
+                                        {% endblock %}
+
+                                        {% block external_link %}
+                                            <a class="btn btn-secondary btn-sm" rel="noreferrer" target="_blank" href="https://www.elastic.co/guide/en/elasticsearch/reference/current/modules-cluster.html#cluster-shard-limit">{{ 'help'|trans }}</a>
+                                        {% endblock %}
+                                    {% endembed %}
+                                {% endif %}
+
+                                {% if 'total_shards_per_node' == checkpoint %}
+                                    {% embed 'Embed/audit_checkpoint_embed.html.twig' %}
+                                        {% block comment %}
+                                            {{ ('audit_comments.' ~ checkpoint ~ '.note')|trans({'{setting}': 'cluster.routing.allocation.total_shards_per_node', '{value}': parameters})|raw }}
+                                        {% endblock %}
+
+                                        {% block internal_link %}
+                                            {% if true == hasFeature('cluster_settings') and is_granted('CLUSTER_SETTINGS', 'global') and is_granted('CLUSTER_SETTING_EDIT', 'global') %}
+                                                <a class="text-secondary-emphasis" href="{{ path('cluster_settings') }}">{{ 'cluster_settings'|trans }}</a>
+                                            {% endif %}
+                                        {% endblock %}
+
+                                        {% block external_link %}
+                                            <a class="btn btn-secondary btn-sm" rel="noreferrer" target="_blank" href="https://www.elastic.co/guide/en/elasticsearch/reference/current/allocation-total-shards.html#allocation-total-shards">{{ 'help'|trans }}</a>
+                                        {% endblock %}
+                                    {% endembed %}
+                                {% endif %}
+
+                                {% if 'deprecations' == checkpoint %}
+                                    {% embed 'Embed/audit_checkpoint_embed.html.twig' %}
+                                        {% block comment %}
+                                            {% if 'audit_notice' == result %}
+                                                {% for title, total in parameters %}
+                                                    {{ title|trans }} <code>{{ total }}</code>{% if false == loop.last %},{% endif %}
+                                                {% endfor %}
+                                            {% endif %}
+                                        {% endblock %}
+
+                                        {% block internal_link %}
+                                            {% if true == hasFeature('deprecations') and is_granted('DEPRECATIONS', 'global') %}
+                                                <a class="text-secondary-emphasis" href="{{ path('deprecations') }}">{{ 'deprecations'|trans }}</a>
+                                            {% endif %}
+                                        {% endblock %}
+                                    {% endembed %}
+                                {% endif %}
+
+                                {% if 'format_msg_no_lookups' == checkpoint %}
+                                    {% embed 'Embed/audit_checkpoint_embed.html.twig' %}
+                                        {% block comment %}
+                                            {% if 'audit_fail' == result %}
+                                                {{ ('audit_comments.' ~ checkpoint ~ '.fail')|trans|raw }}
+                                                {% for node in parameters %}
+                                                    {{ node }}{% if false == loop.last %},{% endif %}
+                                                {% endfor %}
+                                            {% endif %}
+                                        {% endblock %}
+
+                                        {% block external_link %}
+                                            <a class="btn btn-secondary btn-sm" rel="noreferrer" target="_blank" href="https://discuss.elastic.co/t/apache-log4j2-remote-code-execution-rce-vulnerability-cve-2021-44228-esa-2021-31/291476">{{ 'help'|trans }}</a>
+                                        {% endblock %}
+                                    {% endembed %}
+                                {% endif %}
+                            </tr>
+                        {% endfor %}
+                    {% endfor %}
+                {% endblock %}
+            {% endembed %}
+        {% endblock %}
+    {% endembed %}
+{% endblock %}

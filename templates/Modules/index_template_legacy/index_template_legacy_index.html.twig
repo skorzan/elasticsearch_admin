@@ -1,0 +1,42 @@
+{% extends 'base.html.twig' %}
+{% import 'Import/app_import.html.twig' as appImport %}
+
+{% block head_title %}{{ 'index_templates_legacy'|trans }}{% endblock %}
+
+{% block heading_1 %}
+    {{ appImport.heading({'level': 1, 'title': 'index_templates_legacy'|trans}) }}
+{% endblock %}
+
+{% block tabs %}
+    {% include 'Modules/index_template_legacy/index_template_legacy_tabs.html.twig' with {'active': 'list'} %}
+{% endblock %}
+
+{% block main_content %}
+    {% if true == hasFeature('composable_template') %}
+        <div class="jumbotron mt-3 bg-secondary-subtle border">
+            <p class="lead">{{ 'deprecated_legacy_index_templates'|trans({'{href}': path('index_templates'), '{class}': 'text-secondary'})|raw }}</p>
+        </div>
+    {% endif %}
+
+    {% embed 'Embed/block_embed.html.twig' %}
+        {% import 'Import/app_import.html.twig' as appImport %}
+        {% block content %}
+            {{ appImport.form({'form': form, 'type': 'search'}) }}
+        {% endblock %}
+    {% endembed %}
+
+    {% embed 'Embed/block_embed.html.twig' %}
+        {% import 'Import/app_import.html.twig' as appImport %}
+        {% block content %}
+            {{ appImport.heading({'level': 3, 'title': 'list'|trans, 'badge': {'title': templates.total}}) }}
+
+            {% if 0 < templates.total %}
+                {{ appImport.paginator(templates) }}
+
+                {% include 'Modules/index_template_legacy/index_template_legacy_list.html.twig' with {'templates': templates} %}
+
+                {{ appImport.paginator(templates) }}
+            {% endif %}
+        {% endblock %}
+    {% endembed %}
+{% endblock %}

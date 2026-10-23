@@ -1,0 +1,67 @@
+{% extends 'base.html.twig' %}
+{% import 'Import/app_import.html.twig' as appImport %}
+
+{% block head_title %}{{ 'app_roles'|trans }} - {{ role.name }}{% endblock %}
+
+{% block heading_1 %}
+    {{ appImport.heading({'level': 1, 'title': 'app_roles'|trans, 'link': {'url': path('app_roles')}}) }}
+{% endblock %}
+
+{% block heading_2 %}
+    {{ appImport.heading({'level': 2, 'title': role.name}) }}
+{% endblock %}
+
+{% block tabs %}
+    {% include 'Modules/app_role/app_role_read_tabs.html.twig' with {'active': 'summary'} %}
+{% endblock %}
+
+{% block main_content %}
+    {% embed 'Embed/block_embed.html.twig' %}
+        {% import 'Import/app_import.html.twig' as appImport %}
+        {% block content %}
+            {{ appImport.heading({'level': 3, 'title': 'summary'|trans}) }}
+
+            {% embed 'Embed/buttons_embed.html.twig' %}
+                {% import 'Import/app_import.html.twig' as appImport %}
+                {% block content %}
+                    {% if is_granted('APP_ROLE_DELETE', role) %}
+                        {{ appImport.buttonModal({
+                            'id': 'RoleDelete',
+                            'title': 'delete'|trans,
+                            'body': role.name,
+                            'href': path('app_roles_delete', {'role': role.name}),
+                        }) }}
+                    {% endif %}
+                {% endblock %}
+            {% endembed %}
+
+            <hr>
+
+            <div class="row">
+                {{ appImport.dashboardKpi({'title': 'created_at'|trans, 'badge': {'title': role.createdAt|human_datetime}}) }}
+            </div>
+
+            {% embed 'Embed/table_embed.html.twig' %}
+                {% block thead %}
+                    <tr>
+                        <th>{{ 'permissions'|trans }}</th>
+                    </tr>
+                {% endblock %}
+
+                {% block tbody %}
+                    {% for module, permissions in permissions_saved %}
+                        <tr>
+                            <th>{{ module }}</th>
+                        </tr>
+
+                        {% for permission in permissions %}
+                            <tr>
+                                <td>{{ permission }}</td>
+                            </tr>
+                        {% endfor %}
+                    {% endfor %}
+                {% endblock %}
+            {% endembed %}
+        {% endblock %}
+    {% endembed %}
+{% endblock %}

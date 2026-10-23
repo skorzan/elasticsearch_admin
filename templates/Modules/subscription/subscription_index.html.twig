@@ -1,0 +1,93 @@
+{% extends 'base.html.twig' %}
+{% import 'Import/app_import.html.twig' as appImport %}
+
+{% block head_title %}{{ 'subscriptions'|trans }}{% endblock %}
+
+{% block heading_1 %}
+    {{ appImport.heading({'level': 1, 'title': 'subscriptions'|trans}) }}
+{% endblock %}
+
+{% block tabs %}
+    {% include 'Modules/subscription/subscription_tabs.html.twig' with {'active': 'list'} %}
+{% endblock %}
+
+{% block importmap %}
+    {{ importmap(['app', 'app-subscription']) }}
+{% endblock %}
+
+{% block main_content %}
+    <div class="jumbotron mt-3 bg-secondary-subtle border ">
+        <p class="lead">{{ 'subscriptions_note'|trans }}</p>
+    </div>
+
+    {% embed 'Embed/block_embed.html.twig' %}
+        {% import 'Import/app_import.html.twig' as appImport %}
+        {% block content %}
+            {{ appImport.heading({'level': 3, 'title': 'list'|trans, 'badge': {'title': subscriptions|length}}) }}
+
+            {% if 0 < subscriptions|length %}
+                {% embed 'Embed/table_embed.html.twig' %}
+                    {% import 'Import/app_import.html.twig' as appImport %}
+
+                    {% block thead %}
+                        <tr>
+                            <th>{{ 'type'|trans }}</th>
+                            <th>{{ 'details'|trans }}</th>
+                            <th>{{ 'notifications'|trans }}</th>
+                            <th class="d-none d-xl-table-cell">{{ 'created_at'|trans }}{{ appImport.badge({'title': 'sort_desc'|trans, 'context': 'secondary'}) }}</th>
+                            <th class="text-nowrap">&nbsp;</th>
+                        </tr>
+                    {% endblock %}
+
+                    {% block tbody %}
+                        {% for subscription in subscriptions %}
+                            <tr>
+                                <td>
+                                    {{ ('subscription_' ~ subscription.type)|trans }}
+                                </td>
+                                <td>
+                                    {% if 'email' == subscription.type %}
+                                        {{ subscription.endpoint }}<br>
+                                    {% endif %}
+
+                                    {% if 'push' == subscription.type %}
+                                        {{ subscription.os }}<br>
+                                        {{ subscription.client }}
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {{ subscription.notifications|join(', ') }}
+                                </td>
+                                <td class="d-none d-xl-table-cell">
+                                    {{ subscription.createdAt|human_datetime }}
+                                </td>
+                                <td class="text-nowrap actions">
+                                    <a href="{{ path('app_subscriptions_update', {'id': subscription.id}) }}" class="btn btn-primary btn-sm">
+                                        {{ 'update'|trans }}
+                                    </a>
+
+                                    {{ appImport.buttonModal({
+                                        'id': 'SubscriptionDelete' ~ subscription.id,
+                                        'title': 'delete'|trans,
+                                        'body': ('subscription_' ~ subscription.type)|trans,
+                                        'href': path('app_subscriptions_delete', {'id': subscription.id}),
+                                    }) }}
+
+                                    {% if 'push' == subscription.type %}
+                                        <a data-endpoint="{{ subscription.endpoint }}" href="{{ path('app_subscriptions_delete', {'id': subscription.id}) }}" class="btn btn-primary btn-sm d-none unsubscribe-button">
+                                            {{ 'unsubscribe'|trans }}
+                                        </a>
+
+                                        <a href="{{ path('app_subscriptions_test', {'id': subscription.id}) }}" class="btn btn-primary btn-sm test-notification-push">
+                                            {{ 'test'|trans }}
+                                        </a>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    {% endblock %}
+                {% endembed %}
+            {% endif %}
+        {% endblock %}
+    {% endembed %}
+{% endblock %}

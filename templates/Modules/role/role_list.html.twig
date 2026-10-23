@@ -1,0 +1,127 @@
+{% embed 'Embed/table_embed.html.twig' %}
+    {% import 'Import/app_import.html.twig' as appImport %}
+
+    {% set columns = {'name': true, 'reserved': true, 'indices': false, 'applications': false, 'cluster': false, 'deprecated': true, 'deprecated_reason': true} %}
+
+    {% block thead %}
+        <tr>
+            {% for column, display in columns %}
+                {% if true == display %}
+                    {% if 'name' == column %}
+                        <th>
+                            {{ 'name'|trans }}{{ appImport.badge({'title': 'sort_asc'|trans, 'context': 'secondary'}) }}
+                        </th>
+                    {% endif %}
+
+                    {% if 'reserved' == column %}
+                        <th>
+                            {{ 'reserved'|trans }}
+                        </th>
+                    {% endif %}
+
+                    {% if 'deprecated' == column %}
+                        <th>
+                            {{ 'deprecated'|trans }}
+                        </th>
+                    {% endif %}
+
+                    {% if 'deprecated_reason' == column %}
+                        <th>
+                            {{ 'deprecated_reason'|trans }}
+                        </th>
+                    {% endif %}
+
+                    {% if 'indices' == column %}
+                        <th>
+                            {{ 'indices'|trans }}
+                        </th>
+                    {% endif %}
+
+                    {% if 'applications' == column %}
+                        <th>
+                            {{ 'applications'|trans }}
+                        </th>
+                    {% endif %}
+
+                    {% if 'cluster' == column %}
+                        <th>
+                            {{ 'cluster'|trans }}
+                        </th>
+                    {% endif %}
+                {% endif %}
+            {% endfor %}
+        </tr>
+    {% endblock %}
+
+    {% block tbody %}
+        {% for row in roles.rows %}
+            <tr>
+                {% for column, display in columns %}
+                    {% if true == display %}
+                        {% if 'name' == column %}
+                            <td>
+                                <a class="text-primary-emphasis" href="{{ path('elasticsearch_roles_read', {'role': row.name}) }}">{{ row.name }}</a>
+                            </td>
+                        {% endif %}
+
+                        {% if 'reserved' == column %}
+                            <td>
+                                {% if row.isReserved %}
+                                    {{ appImport.badge({'title': 'boolean.true'|trans, 'context': 'true'}) }}
+                                {% else %}
+                                    {{ appImport.badge({'title': 'boolean.false'|trans, 'context': 'false'}) }}
+                                {% endif %}
+                            </td>
+                        {% endif %}
+
+                        {% if 'deprecated' == column %}
+                            <td>
+                                {% if row.isDeprecated %}
+                                    {{ appImport.badge({'title': 'boolean.true'|trans, 'context': 'true'}) }}
+                                {% else %}
+                                    {{ appImport.badge({'title': 'boolean.false'|trans, 'context': 'false'}) }}
+                                {% endif %}
+                            </td>
+                        {% endif %}
+
+                        {% if 'deprecated_reason' == column %}
+                            <td>
+                                {% if row.isDeprecated and row.deprecatedReason %}
+                                    {{ row.deprecatedReason }}
+                                {% endif %}
+                            </td>
+                        {% endif %}
+
+                        {% if 'indices' == column %}
+                            <td>
+                                {% if row.indices and 0 < row.indices|length %}
+                                    {% for record in row.indices %}
+                                        <small>#{{ loop.index }}: {{ record['names']|join(', ') }} ({{ record['privileges']|join(', ') }})</small><br>
+                                    {% endfor %}
+                                {% endif %}
+                            </td>
+                        {% endif %}
+
+                        {% if 'applications' == column %}
+                            <td>
+                                {% if row.applications and 0 < row.applications|length %}
+                                    {% for record in row.applications %}
+                                        <small>#{{ loop.index }}: {{ record['application'] }} ({{ record['privileges']|join(', ') }})</small><br>
+                                    {% endfor %}
+                                {% endif %}
+                            </td>
+                        {% endif %}
+
+                        {% if 'cluster' == column %}
+                            <td>
+                                {% if row.cluster and 0 < row.cluster|length %}
+                                    <small>{{ row.cluster|join(', ') }}</small>
+                                {% endif %}
+                            </td>
+                        {% endif %}
+                    {% endif %}
+                {% endfor %}
+            </tr>
+        {% endfor %}
+    {% endblock %}
+{% endembed %}

@@ -1,0 +1,180 @@
+{% extends 'base.html.twig' %}
+{% import 'Import/app_import.html.twig' as appImport %}
+
+{% block head_title %}{{ 'cat'|trans }}{% if rows is defined or help is defined %} - {{ command_replace }}{% endif %}{% endblock %}
+
+{% block heading_1 %}
+    {{ appImport.heading({'level': 1, 'title': 'cat'|trans}) }}
+{% endblock %}
+
+{% block main_content %}
+    {% embed 'Embed/block_embed.html.twig' %}
+        {% import 'Import/app_import.html.twig' as appImport %}
+        {% block content %}
+            {% embed 'Embed/buttons_embed.html.twig' %}
+                {% import 'Import/app_import.html.twig' as appImport %}
+                {% block content %}
+                    <a class="btn btn-secondary btn-sm" rel="noreferrer" target="_blank" href="https://www.elastic.co/guide/en/elasticsearch/reference/current/cat.html#cat">
+                        {{ 'help'|trans }}
+                    </a>
+                {% endblock %}
+            {% endembed %}
+
+            {{ appImport.form({'form': form}) }}
+        {% endblock %}
+    {% endembed %}
+
+    {% if rows is defined or help is defined %}
+        {% embed 'Embed/block_embed.html.twig' %}
+            {% import 'Import/app_import.html.twig' as appImport %}
+            {% block content %}
+                {% if rows is defined %}
+                    {{ appImport.heading({'level': 3, 'title': command_replace, 'badge': {'title': rows.total}}) }}
+                {% else %}
+                    {{ appImport.heading({'level': 3, 'title': command_replace}) }}
+                {% endif %}
+
+                {% if help is defined %}
+                    <p>
+                        <button class="btn btn-secondary btn-sm" type="button" data-bs-toggle="collapse" data-bs-target="#collapseHelp" aria-expanded="false" aria-controls="collapseHelp">
+                            {{ 'help'|trans }}
+                        </button>
+                    </p>
+
+                    <div class="collapse mb-4" id="collapseHelp">
+                        <div class="card bg-dark border border-secondary card-body">
+                            <pre><code>{{ help }}</code></pre>
+                        </div>
+                    </div>
+                {% endif %}
+
+                {% if rows is defined and 0 < rows.total %}
+                    {% if is_granted('CAT_EXPORT', 'global') %}
+                        {% embed 'Embed/buttons_embed.html.twig' %}
+                            {% block content %}
+                                <a class="btn btn-primary btn-sm" href="{{ path('cat_export', {'type': 'csv', 'delimiter': ','}|merge(app.request.query.all)) }}">CSV,</a>
+                                <a class="btn btn-primary btn-sm" href="{{ path('cat_export', {'type': 'csv', 'delimiter': ';'}|merge(app.request.query.all)) }}">CSV;</a>
+                                <a class="btn btn-primary btn-sm" href="{{ path('cat_export', {'type': 'csv', 'delimiter': '\t'}|merge(app.request.query.all)) }}">TSV</a>
+                                <a class="btn btn-primary btn-sm" href="{{ path('cat_export', {'type': 'ods'}|merge(app.request.query.all)) }}">ODS</a>
+                                <a class="btn btn-primary btn-sm" href="{{ path('cat_export', {'type': 'xlsx'}|merge(app.request.query.all)) }}">XLSX</a>
+                            {% endblock %}
+                        {% endembed %}
+                    {% endif %}
+
+                    {{ appImport.paginator(rows) }}
+
+                    {% embed 'Embed/table_embed.html.twig' %}
+                        {% import 'Import/app_import.html.twig' as appImport %}
+
+                        {% block thead %}
+                            <tr>
+                                {% for header in headers %}
+                                    <th>
+                                        {{ header }}
+                                    </th>
+                                {% endfor %}
+                            </tr>
+                        {% endblock %}
+
+                        {% block tbody %}
+                            {% for row in rows.rows %}
+                                <tr>
+                                    {% for k, column in row %}
+                                        <td>
+                                            {% if k in ['node', 'source_node', 'target_node', 'node_name'] and master_node == column %}
+                                                {{ column }}{{ appImport.badge({'title': 'master'|trans, 'context': 'master_node'}) }}
+                                            {% elseif command in ['nodes', 'plugins'] and 'name' == k and master_node == column %}
+                                                {{ column }}{{ appImport.badge({'title': 'master'|trans, 'context': 'master_node'}) }}
+                                            {% elseif 'status' == k and 'health' == command %}
+                                                {{ appImport.badge({'title': column|trans, 'context': column}) }}
+                                            {% elseif k in ['health', 'status'] and command in ['indices', 'indices/{index}'] %}
+                                                {{ appImport.badge({'title': column|trans, 'context': column}) }}
+                                            {% elseif 'state' == k and command in ['shards', 'shards/{index}'] %}
+                                                {{ appImport.badge({'title': column|lower|trans, 'context': column|lower}) }}
+                                            {% else %}
+                                                {{ column }}
+                                            {% endif %}
+                                        </td>
+                                    {% endfor %}
+                                </tr>
+                            {% endfor %}
+                        {% endblock %}
+                    {% endembed %}
+
+                    {{ appImport.paginator(rows) }}
+                {% endif %}
+            {% endblock %}
+        {% endembed %}
+    {% endif %}
+{% endblock %}
+
+{% block scripts %}
+    {{ parent() }}
+
+    <script type="text/javascript">
+        var command = document.getElementById('command');
+
+        function toggle() {
+            var commandValue = command.value;
+
+            if (commandValue.indexOf('{name}') != -1) {
+                enable('name');
+            } else {
+                disable('name');
+            }
+
+            if (commandValue.indexOf('{index}') != -1) {
+                enable('index');
+            } else {
+                disable('index');
+            }
+
+            if (commandValue.indexOf('{repository}') != -1) {
+                enable('repository');
+            } else {
+                disable('repository');
+            }
+
+            if (commandValue.indexOf('{alias}') != -1) {
+                enable('alias');
+            } else {
+                disable('alias');
+            }
+
+            if (commandValue.indexOf('{node}') != -1) {
+                enable('node');
+            } else {
+                disable('node');
+            }
+        }
+
+        function enable(id) {
+            var el = document.getElementById(id);
+            el.parentNode.style.display = '';
+            el.setAttribute('required', 'required');
+            removeBadge(id)
+            var label = document.querySelector('label[for="' + id + '"]');
+            label.insertAdjacentHTML('beforeend', ' <small class="form-required badge bg-light text-dark ml-1">{{ 'required'|trans|escape('js') }}</small>');
+        }
+
+        function disable(id) {
+            var el = document.getElementById(id);
+            el.parentNode.style.display = 'none';
+            el.removeAttribute('required');
+            removeBadge(id)
+        }
+
+        function removeBadge(id) {
+            var badge = document.querySelector('label[for="' + id + '"] .badge');
+            if (badge) {
+                badge.parentNode.removeChild(badge);
+            }
+        }
+
+        toggle();
+
+        command.addEventListener('change', function(event) {
+            toggle();
+        });
+    </script>
+{% endblock %}

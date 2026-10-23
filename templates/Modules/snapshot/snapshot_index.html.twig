@@ -1,0 +1,36 @@
+{% extends 'base.html.twig' %}
+{% import 'Import/app_import.html.twig' as appImport %}
+
+{% block head_title %}{{ 'snapshots'|trans }}{% endblock %}
+
+{% block heading_1 %}
+    {{ appImport.heading({'level': 1, 'title': 'snapshots'|trans}) }}
+{% endblock %}
+
+{% block tabs %}
+    {% include 'Modules/snapshot/snapshot_tabs.html.twig' with {'active': 'list'} %}
+{% endblock %}
+
+{% block main_content %}
+    {% embed 'Embed/block_embed.html.twig' %}
+        {% import 'Import/app_import.html.twig' as appImport %}
+        {% block content %}
+            {{ appImport.form({'form': form, 'type': 'search'}) }}
+        {% endblock %}
+    {% endembed %}
+
+    {% embed 'Embed/block_embed.html.twig' %}
+        {% import 'Import/app_import.html.twig' as appImport %}
+        {% block content %}
+            {{ appImport.heading({'level': 3, 'title': 'list'|trans, 'badge': {'title': snapshots.total}}) }}
+
+            {% if 0 < snapshots.total %}
+                {{ appImport.paginator(snapshots) }}
+
+                {% include 'Modules/snapshot/snapshot_list.html.twig' with {'snapshots': snapshots} %}
+
+                {{ appImport.paginator(snapshots) }}
+            {% endif %}
+        {% endblock %}
+    {% endembed %}
+{% endblock %}

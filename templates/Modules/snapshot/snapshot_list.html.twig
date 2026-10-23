@@ -1,0 +1,137 @@
+{% embed 'Embed/table_embed.html.twig' %}
+    {% import 'Import/app_import.html.twig' as appImport %}
+
+    {% set columns = {'name': true, 'repository': true, 'indices': false, 'state': true, 'start_time': true, 'end_time': true, 'duration': true, 'failures': true, 'version': true} %}
+
+    {% set is_granted_repositories = is_granted('REPOSITORIES_LIST', 'repository') %}
+
+    {% block thead %}
+        <tr>
+            {% for column, display in columns %}
+                {% if true == display %}
+                    {% if 'repository' == column %}
+                        <th>
+                            {{ 'repository'|trans }}
+                        </th>
+                    {% endif %}
+
+                    {% if 'name' == column %}
+                        <th>
+                            {{ 'name'|trans }}
+                        </th>
+                    {% endif %}
+
+                    {% if 'indices' == column %}
+                        <th>
+                            {{ 'indices'|trans }}
+                        </th>
+                    {% endif %}
+
+                    {% if 'state' == column %}
+                        <th>
+                            {{ 'state'|trans }}
+                        </th>
+                    {% endif %}
+
+                    {% if 'start_time' == column %}
+                        <th>
+                            {{ 'start_time'|trans }}{{ appImport.badge({'title': 'sort_desc'|trans, 'context': 'secondary'}) }}
+                        </th>
+                    {% endif %}
+
+                    {% if 'end_time' == column %}
+                        <th>
+                            {{ 'end_time'|trans }}
+                        </th>
+                    {% endif %}
+
+                    {% if 'duration' == column %}
+                        <th class="d-none d-xl-table-cell">
+                            {{ 'duration'|trans }}
+                        </th>
+                    {% endif %}
+
+                    {% if 'failures' == column %}
+                        <th class="d-none d-xl-table-cell">
+                            {{ 'failures'|trans }}
+                        </th>
+                    {% endif %}
+
+                    {% if 'version' == column %}
+                        <th class="d-none d-xl-table-cell">
+                            {{ 'version'|trans }}
+                        </th>
+                    {% endif %}
+                {% endif %}
+            {% endfor %}
+        </tr>
+    {% endblock %}
+
+    {% block tbody %}
+        {% for row in snapshots.rows %}
+            <tr>
+                {% for column, display in columns %}
+                    {% if true == display %}
+                        {% if 'repository' == column %}
+                            <td>
+                                {% if is_granted_repositories %}
+                                    <a class="text-secondary-emphasis" href="{{ path('repositories_read', {'repository': row.repository}) }}">{{ row.repository }}</a>
+                                {% else %}
+                                    {{ row.repository }}
+                                {% endif %}
+                            </td>
+                        {% endif %}
+
+                        {% if 'name' == column %}
+                            <td>
+                                <a class="text-primary-emphasis" href="{{ path('snapshots_read', {'repository': row.repository, 'snapshot': row.name}) }}">{{ row.name }}</a>
+                            </td>
+                        {% endif %}
+
+                        {% if 'indices' == column %}
+                            <td>
+                                {{ row.indices|join(', ') }}
+                            </td>
+                        {% endif %}
+
+                        {% if 'state' == column %}
+                            <td>
+                                {{ appImport.badge({'title': row.state|trans, 'context': row.state}) }}
+                            </td>
+                        {% endif %}
+
+                        {% if 'start_time' == column %}
+                            <td>
+                                {{ row.startTime|human_datetime }}
+                            </td>
+                        {% endif %}
+
+                        {% if 'end_time' == column %}
+                            <td>
+                                {{ row.endTime|human_datetime }}
+                            </td>
+                        {% endif %}
+
+                        {% if 'duration' == column %}
+                            <td class="d-none d-xl-table-cell">
+                                {{ row.duration }}
+                            </td>
+                        {% endif %}
+
+                        {% if 'failures' == column %}
+                            <td class="d-none d-xl-table-cell">
+                                {{ row.failures|length }}
+                            </td>
+                        {% endif %}
+
+                        {% if 'version' == column %}
+                            <td class="d-none d-xl-table-cell">
+                                {{ row.version }}
+                            </td>
+                        {% endif %}
+                    {% endif %}
+                {% endfor %}
+            </tr>
+        {% endfor %}
+    {% endblock %}
+{% endembed %}

@@ -1,0 +1,91 @@
+{% extends 'base.html.twig' %}
+{% import 'Import/app_import.html.twig' as appImport %}
+
+{% block head_title %}{{ 'app_users'|trans }} - {{ user.email }}{% endblock %}
+
+{% block heading_1 %}
+    {{ appImport.heading({'level': 1, 'title': 'app_users'|trans, 'link': {'url': path('app_users')}}) }}
+{% endblock %}
+
+{% block heading_2 %}
+    {{ appImport.heading({'level': 2, 'title': user.email}) }}
+{% endblock %}
+
+{% block tabs %}
+    {% include 'Modules/app_user/app_user_read_tabs.html.twig' with {'active': 'summary'} %}
+{% endblock %}
+
+{% block main_content %}
+    {% embed 'Embed/block_embed.html.twig' %}
+        {% import 'Import/app_import.html.twig' as appImport %}
+        {% block content %}
+            {{ appImport.heading({'level': 3, 'title': 'summary'|trans}) }}
+
+            {% embed 'Embed/buttons_embed.html.twig' %}
+                {% import 'Import/app_import.html.twig' as appImport %}
+                {% block content %}
+                    {% if is_granted('APP_USER_DELETE', user) %}
+                        {{ appImport.buttonModal({
+                            'id': 'UserDelete',
+                            'title': 'delete'|trans,
+                            'body': user.email,
+                            'href': path('app_users_delete', {'user': user.id}),
+                        }) }}
+                    {% endif %}
+                {% endblock %}
+            {% endembed %}
+
+            <hr>
+
+            <div class="row">
+                {{ appImport.dashboardKpi({'title': 'created_at'|trans, 'badge': {'title': user.createdAt|human_datetime}}) }}
+            </div>
+
+            {% if user.roles and 0 < user.roles|length %}
+                {% embed 'Embed/table_embed.html.twig' %}
+                    {% block thead %}
+                        <tr>
+                            <th>{{ 'app_roles'|trans }}</th>
+                        </tr>
+                    {% endblock %}
+
+                    {% block tbody %}
+                        {% for record in user.roles %}
+                            <tr>
+                                {% if record not in ['ROLE_ADMIN', 'ROLE_USER'] %}
+                                    <td><a class="text-secondary-emphasis" href="{{ path('app_roles_read', {'role': record}) }}">{{ record }}</a></td>
+                                {% else %}
+                                    <td>{{ record }}</td>
+                                {% endif %}
+                            </tr>
+                        {% endfor %}
+                    {% endblock %}
+                {% endembed %}
+            {% endif %}
+
+            {% if 0 < permissions_saved|length %}
+                {% embed 'Embed/table_embed.html.twig' %}
+                    {% block thead %}
+                        <tr>
+                            <th>{{ 'permissions'|trans }}</th>
+                        </tr>
+                    {% endblock %}
+
+                    {% block tbody %}
+                        {% for module, permissions in permissions_saved %}
+                            <tr>
+                                <th>{{ module }}</th>
+                            </tr>
+
+                            {% for permission in permissions %}
+                                <tr>
+                                    <td>{{ permission }}</td>
+                                </tr>
+                            {% endfor %}
+                        {% endfor %}
+                    {% endblock %}
+                {% endembed %}
+            {% endif %}
+        {% endblock %}
+    {% endembed %}
+{% endblock %}

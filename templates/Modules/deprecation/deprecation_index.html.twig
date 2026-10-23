@@ -1,0 +1,67 @@
+{% extends 'base.html.twig' %}
+{% import 'Import/app_import.html.twig' as appImport %}
+
+{% block head_title %}{{ 'deprecations'|trans }}{% endblock %}
+
+{% block heading_1 %}
+    {{ appImport.heading({'level': 1, 'title': 'deprecations'|trans}) }}
+{% endblock %}
+
+{% block main_content %}
+    {% for key, rows in deprecations %}
+        {% embed 'Embed/block_embed.html.twig' %}
+            {% import 'Import/app_import.html.twig' as appImport %}
+            {% block content %}
+                {{ appImport.heading({'level': 3, 'title': key|trans, 'badge': {'title': rows|length}}) }}
+
+                {% if 0 < rows|length %}
+                    {% embed 'Embed/table_embed.html.twig' %}
+                        {% import 'Import/app_import.html.twig' as appImport %}
+
+                        {% block thead %}
+                            <tr>
+                                <th>{{ 'level'|trans }}</th>
+                                <th>{{ 'message'|trans }}</th>
+                                {% if 'index_settings' == key %}
+                                    <th>{{ 'index'|trans }}</th>
+                                {% endif %}
+                                <th class="text-nowrap">{{ 'external_link'|trans }}</th>
+                            </tr>
+                        {% endblock %}
+
+                        {% block tbody %}
+                            {% set rowsFlat = [] %}
+                            {% set count = 0 %}
+                            {% for k, row in rows %}
+                                {% if row['level'] is defined %}
+                                    {% set rowsFlat = rowsFlat|merge({(count): row}) %}
+                                    {% set count = count + 1 %}
+                                {% elseif 'index_settings' == key %}
+                                    {% for rowSub in row %}
+                                        {% set rowSub = rowSub|merge({'index': k}) %}
+                                        {% set rowsFlat = rowsFlat|merge({(count): rowSub}) %}
+                                        {% set count = count + 1 %}
+                                    {% endfor %}
+                                {% endif %}
+                            {% endfor %}
+
+                            {% for row in rowsFlat %}
+                                <tr>
+                                    <td>{{ appImport.badge({'title': row['level']|trans, 'context': row['level']}) }}</td>
+
+                                    <td><strong>{{ row['message'] }}</strong><br><em>{{ row['details'] }}</em></td>
+
+                                    {% if 'index_settings' == key %}
+                                        <td>{{ row['index'] }}</td>
+                                    {% endif %}
+
+                                    <td><a class="btn btn-secondary btn-sm" rel="noreferrer" target="_blank" href="{{ row['url'] }}">{{ 'help'|trans }}</a></td>
+                                </tr>
+                            {% endfor %}
+                        {% endblock %}
+                    {% endembed %}
+                {% endif %}
+            {% endblock %}
+        {% endembed %}
+    {% endfor %}
+{% endblock %}

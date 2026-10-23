@@ -1,0 +1,81 @@
+{% extends 'base.html.twig' %}
+{% import 'Import/app_import.html.twig' as appImport %}
+
+{% block head_title %}{{ 'nodes'|trans }}{% endblock %}
+
+{% block heading_1 %}
+    {{ appImport.heading({'level': 1, 'title': 'nodes'|trans}) }}
+{% endblock %}
+
+{% block tabs %}
+    {% include 'Modules/node/node_tabs.html.twig' with {'active': 'list'} %}
+{% endblock %}
+
+{% block main_content %}
+    {% embed 'Embed/block_embed.html.twig' %}
+        {% import 'Import/app_import.html.twig' as appImport %}
+        {% block content %}
+            {{ appImport.form({'form': form, 'type': 'search'}) }}
+        {% endblock %}
+    {% endembed %}
+
+    {% embed 'Embed/block_embed.html.twig' %}
+        {% import 'Import/app_import.html.twig' as appImport %}
+        {% block content %}
+            {{ appImport.heading({'level': 3, 'title': 'list'|trans, 'badge': {'title': nodes.total}}) }}
+
+            {% if 0 < nodes.total %}
+                {{ appImport.paginator(nodes) }}
+
+                <div id="list">
+                    {% include 'Modules/node/node_list.html.twig' with {'nodes': nodes} %}
+                </div>
+
+                {{ appImport.paginator(nodes) }}
+            {% endif %}
+        {% endblock %}
+    {% endembed %}
+{% endblock %}
+
+{% block scripts %}
+    {{ parent() }}
+
+    <script type="text/javascript">
+        function fetchNodes() {
+            var url = window.location.href;
+            if(url.indexOf('?') != -1) {
+                url = url + '&fetch=true';
+            } else {
+                url = url + '?fetch=true';
+            }
+
+            fetch(url, {
+                credentials: 'include',
+                method: 'get'
+            }).then(function(response) {
+                if (200 === response.status) {
+                    return response.text();
+                } else {
+                    return null;
+                }
+            }).then(async function(text) {
+                if (text) {
+                    var h3Badge = document.querySelector('h3 .badge');
+                    var list = document.getElementById('list');
+                    list.innerHTML = text;
+                    h3Badge.textContent = list.querySelectorAll('tbody tr').length;
+                }
+
+                await sleep(5000);
+                fetchNodes();
+            }).catch(function() {
+            });
+        }
+
+        let sleep = function sleep(ms) {
+            return new Promise(resolve => setTimeout(resolve, ms));
+        }
+
+        fetchNodes();
+    </script>
+{% endblock %}

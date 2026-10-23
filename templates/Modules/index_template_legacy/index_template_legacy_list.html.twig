@@ -1,0 +1,111 @@
+{% embed 'Embed/table_embed.html.twig' %}
+    {% import 'Import/app_import.html.twig' as appImport %}
+
+    {% set columns = {'name': true, 'index_patterns': true, 'ilm_policy': false, 'order': true, 'version': true, 'system': true} %}
+
+    {% if true == hasFeature('ilm') %}
+        {% set columns = columns|merge({'ilm_policy': true}) %}
+    {% endif %}
+
+    {% set is_granted_ilm_policies = is_granted('ILM_POLICIES_LIST', 'ilm_policy') %}
+
+    {% block thead %}
+        <tr>
+            {% for column, display in columns %}
+                {% if true == display %}
+                    {% if 'name' == column %}
+                        <th>
+                            {{ 'name'|trans }}{{ appImport.badge({'title': 'sort_asc'|trans, 'context': 'secondary'}) }}
+                        </th>
+                    {% endif %}
+
+                    {% if 'index_patterns' == column %}
+                        <th>
+                            {{ 'index_patterns'|trans }}
+                        </th>
+                    {% endif %}
+
+                    {% if 'ilm_policy' == column %}
+                        <th>
+                            {{ 'ilm_policy'|trans }}
+                        </th>
+                    {% endif %}
+
+                    {% if 'order' == column %}
+                        <th>
+                            {{ 'order'|trans }}
+                        </th>
+                    {% endif %}
+
+                    {% if 'version' == column %}
+                        <th>
+                            {{ 'version'|trans }}
+                        </th>
+                    {% endif %}
+
+                    {% if 'system' == column %}
+                        <th class="d-none d-xl-table-cell">
+                            {{ 'system'|trans }}
+                        </th>
+                    {% endif %}
+                {% endif %}
+            {% endfor %}
+        </tr>
+    {% endblock %}
+
+    {% block tbody %}
+        {% for row in templates.rows %}
+            <tr>
+                {% for column, display in columns %}
+                    {% if true == display %}
+                        {% if 'name' == column %}
+                            <td>
+                                <a class="text-primary-emphasis" href="{{ path('index_templates_legacy_read', {'name': row.name}) }}">{{ row.name }}</a>
+                            </td>
+                        {% endif %}
+
+                        {% if 'index_patterns' == column %}
+                            <td>
+                                {{ row.indexPatterns|join(',')|replace({'[': '', ']': ''}) }}
+                            </td>
+                        {% endif %}
+
+                        {% if 'ilm_policy' == column %}
+                            <td>
+                                {% if row.setting('index.lifecycle.name') %}
+                                    {% if is_granted_ilm_policies and hasFeature('ilm') %}
+                                        <a class="text-secondary-emphasis" href="{{ path('ilm_read', {'name': row.setting('index.lifecycle.name')}) }}">{{ row.setting('index.lifecycle.name') }}</a>
+                                    {% else %}
+                                        {{ row.setting('index.lifecycle.name') }}
+                                    {% endif %}
+                                {% endif %}
+                            </td>
+                        {% endif %}
+
+                        {% if 'order' == column %}
+                            <td>
+                                {% if row.order %}
+                                    {{ row.order }}
+                                {% endif %}
+                            </td>
+                        {% endif %}
+
+                        {% if 'version' == column %}
+                            <td>
+                                {% if row.version %}
+                                    {{ row.version }}
+                                {% endif %}
+                            </td>
+                        {% endif %}
+
+                        {% if 'system' == column %}
+                            <td class="d-none d-xl-table-cell">
+                                {{ appImport.badge({'title': ('boolean.' ~ row.isSystem)|trans, 'context': row.isSystem}) }}
+                            </td>
+                        {% endif %}
+                    {% endif %}
+                {% endfor %}
+            </tr>
+        {% endfor %}
+    {% endblock %}
+{% endembed %}
