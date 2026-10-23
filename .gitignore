@@ -32,3 +32,8 @@ public/.htaccess
 /public/assets/
 /assets/vendor/
 ###< symfony/asset-mapper ###
+
+.DS_Store
+*.pem
+*.key
+*.crt

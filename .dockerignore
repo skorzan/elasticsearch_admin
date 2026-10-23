@@ -37,6 +37,10 @@ docs
 phpunit.xml.dist
 screenshots
 src/DataFixtures
-tests
 update.sh
 info.json
+*.pem
+*.key
+*.crt
+docker/*.pem
+docker/*.key

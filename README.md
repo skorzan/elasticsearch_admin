@@ -14,6 +14,9 @@ This release is hardened against known vulnerabilities and tested for zero secur
 * **CVE-2026-109449**:
   * **Severity**: Medium / High (Denial of Service / Process Crash)
   * **Fix**: Upgraded Symfony components (including `symfony/expression-language`) to **v7.4.21+**.
+* **Secret Elimination & Dynamic SSL**:
+  * **Fix**: Removed pre-packaged/hardcoded SSL private keys (`privkey.pem`) and certificates from the Docker image layers. Ephemeral self-signed SSL certificates are generated on-the-fly at runtime if not provided, or custom production certificates can be mounted into `/etc/nginx/ssl/`.
+* **Zero Known Vulnerabilities & Secrets**: Audited with Trivy (0 vulnerabilities, 0 secrets).
 
 ---
 
